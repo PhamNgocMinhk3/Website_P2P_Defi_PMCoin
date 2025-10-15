@@ -8,28 +8,28 @@ DATK Platform là một ứng dụng full-stack được phát triển với m�
 
 Ứng dụng được xây dựng theo mô hình client-server tách biệt, đảm bảo sự phân chia rõ ràng giữa tầng giao diện người dùng (frontend) và tầng xử lý logic nghiệp vụ (backend).
 
-### 2.1. Backend Architecture
+### 2.1. Kiến Trúc Backend
 
-The backend is a monolithic ASP.NET Core application structured using a multi-layer, service-oriented architecture.
+Backend được xây dựng dựa trên ASP.NET Core theo kiến trúc đa tầng, hướng dịch vụ.
 
-- **API Layer**: A set of RESTful controllers (`Controllers/`) exposes the primary HTTP endpoints for all CRUD operations and user-driven actions (e.g., placing a bet, sending a message).
-- **Service Layer**: The core business logic is encapsulated within services (`Services/`). This layer is responsible for orchestrating data from multiple sources, performing calculations, and handling the primary logic for features like game session management, user authentication, and chat operations.
-- **Data Access Layer**: Data persistence is managed via Entity Framework Core, with a `TradeFinanceDbContext` (`Data/`) defining the object-relational mapping to a PostgreSQL database. This context includes all entities, from user models to game and transaction logs.
-- **Real-time Subsystem**: SignalR hubs (`Hubs/`) provide the real-time communication backbone. Key hubs include:
-    - `GameHub`: Broadcasts game state changes, price updates, and round results to all connected clients.
-    - `ChatHub`: Manages real-time messaging, user presence, and typing indicators.
-    - `PresenceHub`: Specifically tracks online status for users across the application.
-- **Background Services**: The system utilizes `IHostedService` implementations for long-running background tasks, including the `GameSessionManagementService` (to control game rounds), `PMCoinBotService` (to simulate market volatility), and `DailyAnalysisScheduler` (for periodic notifications).
+- **Tầng API**: Bao gồm các controllers RESTful (`Controllers/`) cung cấp các điểm cuối HTTP cho tất cả các thao tác CRUD và hành động của người dùng (ví dụ: đặt cược, gửi tin nhắn).
+- **Tầng Dịch Vụ**: Logic nghiệp vụ cốt lõi được đóng gói trong các services (`Services/`). Tầng này chịu trách nhiệm điều phối dữ liệu từ nhiều nguồn, thực hiện tính toán và xử lý logic cho các tính năng như quản lý phiên game, xác thực người dùng và vận hành chat.
+- **Tầng Truy Cập Dữ Liệu**: Quản lý dữ liệu thông qua Entity Framework Core, với `TradeFinanceDbContext` (`Data/`) định nghĩa ánh xạ đối tượng-quan hệ đến cơ sở dữ liệu PostgreSQL. Context này bao gồm tất cả các entities, từ mô hình người dùng đến nhật ký game và giao dịch.
+- **Hệ Thống Thời Gian Thực**: Các hub SignalR (`Hubs/`) cung cấp nền tảng giao tiếp thời gian thực. Các hub chính bao gồm:
+    - `GameHub`: Phát sóng thay đổi trạng thái game, cập nhật giá và kết quả vòng chơi đến tất cả người dùng.
+    - `ChatHub`: Quản lý tin nhắn thời gian thực, hiện diện người dùng và chỉ báo đang nhập.
+    - `PresenceHub`: Theo dõi trạng thái trực tuyến của người dùng trong toàn bộ ứng dụng.
+- **Dịch Vụ Nền**: Hệ thống sử dụng các triển khai `IHostedService` cho các tác vụ nền dài hạn, bao gồm `GameSessionManagementService` (điều khiển vòng game), `PMCoinBotService` (mô phỏng biến động thị trường) và `DailyAnalysisScheduler` (thông báo định kỳ).
 
-### 2.2. Frontend Architecture
+### 2.2. Kiến Trúc Frontend
 
-The frontend is a modern Angular SPA designed for a dynamic and reactive user experience.
+Frontend được xây dựng bằng Angular SPA hiện đại, được thiết kế để tạo trải nghiệm người dùng động và phản ứng nhanh.
 
-- **Component-Based UI**: The UI is built from a tree of modular Angular components (`features/` and `shared/`), promoting reusability and maintainability.
-- **Reactive State Management**: RxJS is used extensively to manage asynchronous data streams from the backend, handle user input, and maintain UI state.
-- **Service Layer**: Angular services (`core/services/`) are responsible for encapsulating all communication with the backend. This includes making HTTP requests to the REST API and managing the persistent SignalR connection.
-- **Routing**: The application uses a feature-based routing module (`app.routes.ts`) with route guards (`AuthGuard`, `AdminGuard`) to protect application sections based on user authentication and authorization status.
-- **Blockchain Interaction**: The frontend leverages the `ethers.js` library to interact directly with user wallets (like MetaMask) for signing transactions or messages, providing a bridge to client-side blockchain operations.
+- **Giao Diện Dựa Trên Components**: UI được xây dựng từ cây các components Angular module hóa (`features/` và `shared/`), tăng khả năng tái sử dụng và bảo trì.
+- **Quản Lý Trạng Thái Reactive**: Sử dụng RxJS để quản lý luồng dữ liệu bất đồng bộ từ backend, xử lý đầu vào người dùng và duy trì trạng thái UI.
+- **Tầng Dịch Vụ**: Các services Angular (`core/services/`) đảm nhiệm việc đóng gói mọi giao tiếp với backend. Bao gồm thực hiện các yêu cầu HTTP đến REST API và quản lý kết nối SignalR liên tục.
+- **Định Tuyến**: Ứng dụng sử dụng module định tuyến theo tính năng (`app.routes.ts`) với các route guards (`AuthGuard`, `AdminGuard`) để bảo vệ các phần của ứng dụng dựa trên trạng thái xác thực và ủy quyền người dùng.
+- **Tương Tác Blockchain**: Frontend sử dụng thư viện `ethers.js` để tương tác trực tiếp với ví người dùng (như MetaMask) để ký giao dịch hoặc tin nhắn, tạo cầu nối cho các hoạt động blockchain phía client.
 
 ### 2.3. Application Routes and API Endpoints
 
@@ -62,19 +62,19 @@ graph LR
     style M fill:#FF5722,color:#fff
 ```
 
-#### 📍 Route Details
+#### 📍 Chi Tiết Các Đường Dẫn
 
-| Route | Access | Features |
+| Đường dẫn | Quyền truy cập | Tính năng |
 |-------|---------|----------|
-| `/login` | Public | - User authentication<br>- Password recovery<br>- 2FA support |
-| `/register` | Public | - Account creation<br>- Email verification<br>- Terms acceptance |
-| `/dashboard` | Protected | - Overview stats<br>- Quick actions<br>- Notifications |
-| `/game` | Protected | - Live trading<br>- Game rooms<br>- Leaderboard |
-| `/chat` | Protected | - Direct messages<br>- Group chats<br>- File sharing |
-| `/p2p` | Protected | - Order book<br>- Trade history<br>- Market stats |
-| `/analysis` | Protected | - Market analysis<br>- Performance metrics<br>- Reports |
-| `/settings` | Protected | - Profile settings<br>- Security options<br>- Preferences |
-| `/admin` | Admin | - User management<br>- System monitoring<br>- Configuration |
+| `/login` | Công khai | - Xác thực người dùng<br>- Khôi phục mật khẩu<br>- Hỗ trợ 2FA |
+| `/register` | Công khai | - Tạo tài khoản<br>- Xác minh email<br>- Chấp nhận điều khoản |
+| `/dashboard` | Bảo vệ | - Thống kê tổng quan<br>- Thao tác nhanh<br>- Thông báo |
+| `/game` | Bảo vệ | - Giao dịch trực tiếp<br>- Phòng chơi game<br>- Bảng xếp hạng |
+| `/chat` | Bảo vệ | - Tin nhắn trực tiếp<br>- Trò chuyện nhóm<br>- Chia sẻ tệp |
+| `/p2p` | Bảo vệ | - Sổ lệnh<br>- Lịch sử giao dịch<br>- Thống kê thị trường |
+| `/analysis` | Bảo vệ | - Phân tích thị trường<br>- Chỉ số hiệu suất<br>- Báo cáo |
+| `/settings` | Bảo vệ | - Cài đặt hồ sơ<br>- Tùy chọn bảo mật<br>- Tùy chỉnh |
+| `/admin` | Quản trị | - Quản lý người dùng<br>- Giám sát hệ thống<br>- Cấu hình |
 
 #### 🔌 API Endpoints Overview
 
@@ -190,108 +190,108 @@ $accent-orange: #FF9800;   // Notifications
 
 ## 3. Core Functionalities In-Depth
 
-### 3.1. Real-Time Bidding Game
+### 3.1. Hệ Thống Game Đặt Cược Thời Gian Thực
 
-The game is a sophisticated, timed, binary-option bidding system with advanced trading features.
+Game là một hệ thống đặt cược binary-option tiên tiến với các tính năng giao dịch nâng cao.
 
-1. **Session Management**: 
-   - The `GameSessionManagementService` initiates and manages game sessions at configurable intervals
-   - Dynamic session timing based on market volatility
-   - Automatic recovery and state management for system resilience
+1. **Quản Lý Phiên**:
+   - `GameSessionManagementService` khởi tạo và quản lý các phiên game theo khoảng thời gian có thể cấu hình
+   - Thời gian phiên động dựa trên biến động thị trường
+   - Tự động khôi phục và quản lý trạng thái để đảm bảo hệ thống ổn định
 
-2. **Advanced Trading Features**:
-   - Real-time price feeds from multiple sources
-   - Advanced bot trading capabilities via `AdvancedBotTradingService`
-   - AI-powered price prediction and trend analysis
-   - Risk management and position sizing algorithms
+2. **Tính Năng Giao Dịch Nâng Cao**:
+   - Cập nhật giá thời gian thực từ nhiều nguồn
+   - Khả năng giao dịch bot nâng cao thông qua `AdvancedBotTradingService`
+   - Dự đoán giá và phân tích xu hướng bằng AI
+   - Thuật toán quản lý rủi ro và điều chỉnh vị thế
 
-3. **Game Mechanics**:
-   - Multiple game modes (Binary Options, Price Prediction, Tournament)
-   - Real-time price broadcasting through `GameHub`
-   - Sophisticated betting system with various options
-   - Advanced profit/loss calculation algorithms
+3. **Cơ Chế Game**:
+   - Nhiều chế độ chơi (Binary Options, Dự Đoán Giá, Giải Đấu)
+   - Phát sóng giá thời gian thực qua `GameHub`
+   - Hệ thống đặt cược đa dạng với nhiều tùy chọn
+   - Thuật toán tính toán lợi nhuận/thua lỗ nâng cao
 
-4. **Analytics and Monitoring**:
-   - Real-time bet distribution analysis
-   - Automated risk assessment
-   - Performance metrics and KPIs
-   - Advanced reporting through `RealTimeBetAnalysisService`
+4. **Phân Tích và Giám Sát**:
+   - Phân tích phân bố cược thời gian thực
+   - Đánh giá rủi ro tự động
+   - Các chỉ số hiệu suất quan trọng (KPIs)
+   - Báo cáo nâng cao thông qua `RealTimeBetAnalysisService`
 
-5. **Safety Features**:
-   - Automated circuit breakers for market volatility
-   - Anti-manipulation detection systems
-   - Fair play enforcement mechanisms
-   - Real-time fraud detection
+5. **Tính Năng An Toàn**:
+   - Tự động ngắt mạch khi thị trường biến động mạnh
+   - Hệ thống phát hiện thao túng
+   - Cơ chế đảm bảo công bằng
+   - Phát hiện gian lận thời gian thực
 
-### 3.2. Messaging Platform
+### 3.2. Nền Tảng Nhắn Tin
 
-The chat system provides a rich, real-time communication experience.
+Hệ thống chat cung cấp trải nghiệm giao tiếp thời gian thực phong phú.
 
-- **Communication**: All messages are sent and received over the `ChatHub` WebSocket connection.
-- **Features**: The platform supports one-on-one and group chats, user presence (online/offline status), read receipts, and typing indicators.
-- **Data Persistence**: All messages and chat metadata are stored in the PostgreSQL database, allowing for the retrieval of chat history.
+- **Truyền Thông**: Tất cả tin nhắn được gửi và nhận qua kết nối WebSocket `ChatHub`.
+- **Tính Năng**: Nền tảng hỗ trợ chat một-một và nhóm, hiện diện người dùng (trạng thái online/offline), xác nhận đã đọc và chỉ báo đang nhập.
+- **Lưu Trữ Dữ Liệu**: Tất cả tin nhắn và metadata chat được lưu trong cơ sở dữ liệu PostgreSQL, cho phép truy xuất lịch sử chat.
 
-### 3.3. Blockchain Integration
+### 3.3. Tích Hợp Blockchain
 
-The platform is designed to interface with an Ethereum-compatible blockchain.
+Nền tảng được thiết kế để tương tác với blockchain tương thích Ethereum.
 
-- **Backend (Nethereum)**: The `SmartContractLogService` uses the Nethereum library to listen for specific events emitted by a designated smart contract. When an event is detected, the service logs the relevant data (transaction hash, addresses, amounts) into the `SmartContractLogs` table in the database.
-- **Frontend (Ethers.js)**: The frontend uses `ethers.js` to prompt users for actions via their browser wallet (e.g., MetaMask), enabling client-side interaction with smart contracts.
+- **Backend (Nethereum)**: `SmartContractLogService` sử dụng thư viện Nethereum để lắng nghe các sự kiện được phát ra từ smart contract chỉ định. Khi phát hiện sự kiện, service ghi lại dữ liệu liên quan (hash giao dịch, địa chỉ, số tiền) vào bảng `SmartContractLogs` trong cơ sở dữ liệu.
+- **Frontend (Ethers.js)**: Frontend sử dụng `ethers.js` để yêu cầu người dùng thực hiện hành động thông qua ví trình duyệt (ví dụ: MetaMask), cho phép tương tác với smart contracts từ phía client.
 
-## 4. Database Schema Overview
+## 4. Tổng Quan Cấu Trúc Cơ Sở Dữ Liệu
 
-The PostgreSQL database schema is defined by EF Core and includes several key tables:
+Schema cơ sở dữ liệu PostgreSQL được định nghĩa bởi EF Core và bao gồm các bảng chính sau:
 
-- **User Management**: `Users`, `UserProfiles`, `UserSessions`, `UserBalances`
+- **Quản Lý Người Dùng**: `Users`, `UserProfiles`, `UserSessions`, `UserBalances`
 - **Chat**: `Chats`, `ChatParticipants`, `Messages`, `MessageReads`
 - **Game**: `CurrentGameSessions`, `ActiveBets`, `UserGameStats`, `ProfitAnalysis`
-- **Transactions & History**: `TransactionHistories`, `BalanceTransactions`, `PMCoinPriceHistories`
+- **Giao Dịch & Lịch Sử**: `TransactionHistories`, `BalanceTransactions`, `PMCoinPriceHistories`
 - **Blockchain**: `SmartContractLogs`
 
-Relationships are configured to maintain data integrity, such as cascading deletes for bets within a game session.
+Các mối quan hệ được cấu hình để duy trì tính toàn vẹn dữ liệu, chẳng hạn như xóa theo cascade cho các cược trong một phiên game.
 
-## 5. Security Model
+## 5. Mô Hình Bảo Mật
 
-- **Authentication**: The primary authentication strategy is session-based, managed by the custom `SessionAuthenticationMiddleware`. JWT support is also implemented but can be toggled.
-- **Authorization**: Access to specific API endpoints and frontend routes is restricted using role-based access control (RBAC). The backend defines policies like `AdminOnly`, and the frontend uses `AdminGuard` to enforce this on the client-side.
-- **Transport Security**: The application is configured to use HTTPS in production. A strict Content Security Policy (CSP) is enforced via middleware to prevent cross-site scripting (XSS) attacks.
-- **CORS**: A Cross-Origin Resource Sharing (CORS) policy is configured to only allow requests from the known Angular frontend origin (`http://localhost:4200`).
+- **Xác Thực**: Chiến lược xác thực chính dựa trên phiên, được quản lý bởi `SessionAuthenticationMiddleware` tùy chỉnh. Hỗ trợ JWT cũng được triển khai và có thể bật/tắt.
+- **Phân Quyền**: Truy cập vào các endpoint API cụ thể và đường dẫn frontend được hạn chế sử dụng kiểm soát truy cập dựa trên vai trò (RBAC). Backend định nghĩa các chính sách như `AdminOnly`, và frontend sử dụng `AdminGuard` để thực thi điều này ở phía client.
+- **Bảo Mật Truyền Tải**: Ứng dụng được cấu hình để sử dụng HTTPS trong môi trường production. Chính sách Bảo mật Nội dung (CSP) nghiêm ngặt được thực thi thông qua middleware để ngăn chặn các cuộc tấn công cross-site scripting (XSS).
+- **CORS**: Chính sách Chia Sẻ Tài Nguyên Giữa Các Nguồn Gốc (CORS) được cấu hình để chỉ cho phép yêu cầu từ nguồn gốc frontend Angular đã biết (`http://localhost:4200`).
 
-## 6. Technology Stack
+## 6. Công Nghệ Sử Dụng
 
 ### Backend (.NET)
 
-| Dependency | Version | Usage |
+| Thư viện | Phiên bản | Mục đích sử dụng |
 | :--- | :--- | :--- |
-| **.NET** | 8.0 | Core Framework |
-| **ASP.NET Core** | 8.0 | Web API & Application Host |
-| **Entity Framework Core**| 8.0 | Object-Relational Mapper (ORM) |
-| **Npgsql** | 8.0 | PostgreSQL Database Provider |
-| **SignalR** | 1.2.0 | Real-time Web Functionality |
-| **Nethereum** | 4.14.0 | Ethereum Blockchain Interaction |
-| **JWT Bearer** | 8.0.0 | Authentication |
-| **MailKit** | 4.7.1 | Email Services |
-| **CloudinaryDotNet** | 1.27.6 | Cloud Media Management |
-| **Swashbuckle** | 6.5.0 | API Documentation (Swagger) |
-| **MediatR** | 12.0.0 | CQRS Pattern Implementation |
-| **AutoMapper** | 12.0.0 | Object Mapping |
-| **Quartz.NET** | 3.7.0 | Job Scheduling |
-| **NLog** | 5.2.0 | Advanced Logging |
+| **.NET** | 8.0 | Framework cốt lõi |
+| **ASP.NET Core** | 8.0 | Web API & Ứng dụng máy chủ |
+| **Entity Framework Core**| 8.0 | ORM (Ánh xạ quan hệ đối tượng) |
+| **Npgsql** | 8.0 | Provider cho PostgreSQL |
+| **SignalR** | 1.2.0 | Chức năng web thời gian thực |
+| **Nethereum** | 4.14.0 | Tương tác với Blockchain Ethereum |
+| **JWT Bearer** | 8.0.0 | Xác thực |
+| **MailKit** | 4.7.1 | Dịch vụ email |
+| **CloudinaryDotNet** | 1.27.6 | Quản lý media trên cloud |
+| **Swashbuckle** | 6.5.0 | Tài liệu API (Swagger) |
+| **MediatR** | 12.0.0 | Triển khai CQRS Pattern |
+| **AutoMapper** | 12.0.0 | Ánh xạ đối tượng |
+| **Quartz.NET** | 3.7.0 | Lập lịch công việc |
+| **NLog** | 5.2.0 | Ghi log nâng cao |
 
 ### Frontend (Angular)
 
-| Dependency | Version | Usage |
+| Thư viện | Phiên bản | Mục đích sử dụng |
 | :--- | :--- | :--- |
-| **Angular** | ~20.0.0 | Core Framework |
-| **Angular Material** | ~20.1.0 | UI Component Library |
-| **RxJS** | ~7.8.0 | Reactive Programming |
-| **SignalR Client** | ~9.0.6 | Real-time WebSockets |
-| **Ethers** | ~6.15.0 | Blockchain Interaction (Wallet) |
-| **Lightweight Charts** | ~5.0.8 | High-performance Financial Charts |
-| **Three.js** | ~0.165.0 | 3D Graphics Engine |
-| **TailwindCSS** | ~3.3.0 | Utility-first CSS Framework |
-| **NgRx** | ~16.0.0 | State Management |
-| **Angular JWT** | ~10.0.0 | JWT Handling |
+| **Angular** | ~20.0.0 | Framework cốt lõi |
+| **Angular Material** | ~20.1.0 | Thư viện components UI |
+| **RxJS** | ~7.8.0 | Lập trình reactive |
+| **SignalR Client** | ~9.0.6 | WebSocket thời gian thực |
+| **Ethers** | ~6.15.0 | Tương tác với Blockchain (Ví) |
+| **Lightweight Charts** | ~5.0.8 | Biểu đồ tài chính hiệu năng cao |
+| **Three.js** | ~0.165.0 | Engine đồ họa 3D |
+| **TailwindCSS** | ~3.3.0 | Framework CSS tiện ích |
+| **NgRx** | ~16.0.0 | Quản lý trạng thái |
+| **Angular JWT** | ~10.0.0 | Xử lý JWT |
 
 ## 7. Hướng Dẫn Cài Đặt và Kiểm Thử
 
