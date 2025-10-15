@@ -37,19 +37,44 @@ The frontend is a modern Angular SPA designed for a dynamic and reactive user ex
 
 ```mermaid
 graph LR
-    A[Client Routes] --> B[Public Routes]
-    A --> C[Protected Routes]
-    B --> D[/login 🔑]
-    B --> E[/register 📝]
-    B --> F[/forgot-password 🔄]
-    C --> G[/dashboard 📊]
-    C --> H[/game 🎮]
-    C --> I[/chat 💬]
-    C --> J[/p2p 💱]
-    C --> K[/analysis 📈]
-    C --> L[/settings ⚙️]
-    C --> M[/admin 👑]
+    A((Routes)) --> B{Public}
+    A --> C{Protected}
+    B --> D["Login"]
+    B --> E["Register"]
+    B --> F["Password Reset"]
+    C --> G["Dashboard"]
+    C --> H["Game System"]
+    C --> I["Chat"]
+    C --> J["P2P Trading"]
+    C --> K["Analysis"]
+    C --> L["Settings"]
+    C --> M["Admin Panel"]
+    
+    style D fill:#2196F3,color:#fff
+    style E fill:#4CAF50,color:#fff
+    style F fill:#FFC107,color:#fff
+    style G fill:#9C27B0,color:#fff
+    style H fill:#00BCD4,color:#fff
+    style I fill:#FF9800,color:#fff
+    style J fill:#F44336,color:#fff
+    style K fill:#2196F3,color:#fff
+    style L fill:#757575,color:#fff
+    style M fill:#FF5722,color:#fff
 ```
+
+#### 📍 Route Details
+
+| Route | Access | Features |
+|-------|---------|----------|
+| `/login` | Public | - User authentication<br>- Password recovery<br>- 2FA support |
+| `/register` | Public | - Account creation<br>- Email verification<br>- Terms acceptance |
+| `/dashboard` | Protected | - Overview stats<br>- Quick actions<br>- Notifications |
+| `/game` | Protected | - Live trading<br>- Game rooms<br>- Leaderboard |
+| `/chat` | Protected | - Direct messages<br>- Group chats<br>- File sharing |
+| `/p2p` | Protected | - Order book<br>- Trade history<br>- Market stats |
+| `/analysis` | Protected | - Market analysis<br>- Performance metrics<br>- Reports |
+| `/settings` | Protected | - Profile settings<br>- Security options<br>- Preferences |
+| `/admin` | Admin | - User management<br>- System monitoring<br>- Configuration |
 
 #### 🔌 API Endpoints Overview
 
@@ -82,28 +107,64 @@ graph LR
 | | `/api/admin/users` | GET | List all users | 👑 |
 | | `/api/admin/logs` | GET | System logs | 👑 |
 
-#### 🔄 Real-time WebSocket Connections
+#### 🔄 System Architecture Diagram
+
+```mermaid
+graph TD
+    subgraph Client ["Frontend (Angular)"]
+        A[UI Components] --> B[Services]
+        B --> C[State Management]
+        C --> D[WebSocket Handler]
+        D --> E[HTTP Client]
+    end
+
+    subgraph Server ["Backend (.NET Core)"]
+        F[API Controllers] --> G[Service Layer]
+        G --> H[Data Access]
+        I[SignalR Hubs] --> G
+    end
+
+    subgraph External ["External Services"]
+        J[(PostgreSQL)] --> H
+        K[Blockchain] --> G
+        L[Email Service] --> G
+        M[File Storage] --> G
+    end
+
+    E --> F
+    D --> I
+    
+    style Client fill:#2196F3,color:#fff
+    style Server fill:#4CAF50,color:#fff
+    style External fill:#FFC107,color:#fff
+```
+
+#### 🔌 Integration Flow Diagram
 
 ```mermaid
 sequenceDiagram
-    participant Client
-    participant Server
-    participant Database
+    participant UI as Frontend
+    participant API as Backend API
+    participant WS as WebSocket
+    participant DB as Database
     
-    Client->>Server: Connect to SignalR Hub
-    Server-->>Client: Connection Established
+    UI->>API: HTTP: Authentication
+    API-->>UI: JWT Token
+    UI->>WS: Connect with Token
+    WS-->>UI: Connection Confirmed
     
-    par Game Updates
-        Server->>Client: Real-time Price Updates
-        Server->>Client: Game State Changes
-    and Chat Messages
-        Client->>Server: Send Message
-        Server->>Database: Store Message
-        Server->>Client: Broadcast to Recipients
-    and User Presence
-        Server->>Client: Online Status Updates
-        Client->>Server: Heartbeat
+    par Real-time Updates
+        WS->>UI: Price Updates
+        WS->>UI: Game States
+        WS->>UI: Chat Messages
+    and Data Operations
+        UI->>API: CRUD Operations
+        API->>DB: Data Queries
+        DB-->>API: Results
+        API-->>UI: Response
     end
+
+    Note over UI,DB: All real-time data synchronized
 ```
 
 #### 🎨 Color Scheme & Design System
