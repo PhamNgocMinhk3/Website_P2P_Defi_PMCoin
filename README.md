@@ -1,12 +1,12 @@
-# DATK Platform: A Real-Time Trading & Communication System
+# Nền Tảng DATK: Hệ Thống Giao Dịch & Truyền Thông Thời Gian Thực
 
-## 1. Abstract
+## 1. Tổng Quan
 
-This repository contains the source code for the DATK Platform, a full-stack application engineered for real-time user interaction. The system integrates a sophisticated cryptocurrency-based bidding game, a comprehensive messaging platform, blockchain event logging, and advanced trading analytics. The architecture is designed around a service-oriented .NET backend and a reactive Angular single-page application (SPA), with a strong emphasis on real-time communication via WebSockets and automated trading strategies.
+DATK Platform là một ứng dụng full-stack được phát triển với mục tiêu tạo ra trải nghiệm tương tác thời gian thực cho người dùng. Hệ thống tích hợp game đặt cược dựa trên tiền điện tử, nền tảng nhắn tin đa năng, ghi nhận sự kiện blockchain và phân tích giao dịch nâng cao. Kiến trúc được xây dựng dựa trên backend .NET theo hướng service-oriented và frontend Angular (SPA), với trọng tâm là giao tiếp thời gian thực qua WebSocket và các chiến lược giao dịch tự động.
 
-## 2. System Architecture
+## 2. Kiến Trúc Hệ Thống
 
-The application is built on a decoupled client-server model, ensuring a clean separation of concerns between the frontend presentation layer and the backend business logic.
+Ứng dụng được xây dựng theo mô hình client-server tách biệt, đảm bảo sự phân chia rõ ràng giữa tầng giao diện người dùng (frontend) và tầng xử lý logic nghiệp vụ (backend).
 
 ### 2.1. Backend Architecture
 
@@ -293,25 +293,144 @@ Relationships are configured to maintain data integrity, such as cascading delet
 | **NgRx** | ~16.0.0 | State Management |
 | **Angular JWT** | ~10.0.0 | JWT Handling |
 
-## 7. Setup and Deployment
+## 7. Hướng Dẫn Cài Đặt và Kiểm Thử
 
-### Prerequisites
+### Yêu Cầu Hệ Thống
 
 - .NET 8 SDK
-- Node.js and npm (LTS version)
+- Node.js và npm (phiên bản LTS)
 - Angular CLI (`npm install -g @angular/cli`)
-- A running PostgreSQL instance
+- PostgreSQL đã cài đặt và chạy
 
-### Backend Setup
+### Cài Đặt Backend
 
-1.  **Navigate to directory:** `cd Backend`
-2.  **Configure connection:** Update `DefaultConnection` in `appsettings.Development.json`.
-3.  **Restore dependencies:** `dotnet restore`
-4.  **Apply migrations:** `dotnet ef database update`
-5.  **Run server:** `dotnet run` (API will be on `http://localhost:5000`)
+1. **Di chuyển vào thư mục Backend:**
+   ```bash
+   cd Backend
+   ```
 
-### Frontend Setup
+2. **Cấu hình kết nối database:**
+   - Mở file `appsettings.Development.json`
+   - Cập nhật chuỗi kết nối `DefaultConnection`:
+   ```json
+   {
+     "ConnectionStrings": {
+       "DefaultConnection": "Host=localhost;Database=datk_db;Username=your_username;Password=your_password"
+     }
+   }
+   ```
 
-1.  **Navigate to directory:** `cd client-angular`
-2.  **Restore dependencies:** `npm install`
-3.  **Run server:** `npm start` (UI will be on `http://localhost:4200`)
+3. **Khôi phục dependencies:**
+   ```bash
+   dotnet restore
+   ```
+
+4. **Cập nhật database:**
+   ```bash
+   dotnet ef database update
+   ```
+
+5. **Chạy server:**
+   ```bash
+   dotnet run
+   ```
+   Server API sẽ chạy tại `http://localhost:5000`
+
+### Cài Đặt Frontend
+
+1. **Di chuyển vào thư mục frontend:**
+   ```bash
+   cd client-angular
+   ```
+
+2. **Cài đặt dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Chạy ứng dụng:**
+   ```bash
+   npm start
+   ```
+   Giao diện sẽ chạy tại `http://localhost:4200`
+
+### Hướng Dẫn Test API
+
+#### 🔍 Sử Dụng Swagger UI
+
+1. **Truy cập Swagger:**
+   - Mở trình duyệt và truy cập `http://localhost:5000/swagger`
+   - Swagger UI sẽ hiển thị tất cả các API endpoints có sẵn
+
+2. **Xác thực trong Swagger:**
+   - Click nút "Authorize" (🔓)
+   - Nhập JWT token với format: `Bearer your_token_here`
+   - Các API được bảo vệ sẽ tự động sử dụng token này
+
+3. **Test API:**
+   - Chọn endpoint muốn test
+   - Click "Try it out"
+   - Điền parameters (nếu có)
+   - Click "Execute"
+
+#### 📮 Sử Dụng Postman
+
+1. **Import Collection:**
+   - Tải [DATK API Collection](link_to_collection)
+   - Mở Postman, click Import
+   - Chọn file collection vừa tải
+
+2. **Thiết lập môi trường:**
+   - Tạo environment mới trong Postman
+   - Thêm biến:
+     ```
+     base_url: http://localhost:5000
+     token: your_jwt_token
+     ```
+
+3. **Test API:**
+   - Chọn request muốn test
+   - Đảm bảo đã chọn đúng environment
+   - Điền parameters nếu cần
+   - Click Send
+
+#### 🧪 API Testing Examples
+
+```bash
+# 1. Đăng nhập
+curl -X POST "http://localhost:5000/api/auth/login" \
+     -H "Content-Type: application/json" \
+     -d '{"email":"test@example.com","password":"YourPassword123"}'
+
+# 2. Lấy thông tin người dùng
+curl -X GET "http://localhost:5000/api/users/profile" \
+     -H "Authorization: Bearer your_token_here"
+
+# 3. Tạo giao dịch mới
+curl -X POST "http://localhost:5000/api/p2p/orders" \
+     -H "Authorization: Bearer your_token_here" \
+     -H "Content-Type: application/json" \
+     -d '{"amount":100,"type":"BUY"}'
+```
+
+### API Response Format
+
+```json
+// Success Response
+{
+    "success": true,
+    "data": {
+        // Response data here
+    },
+    "message": "Thao tác thành công"
+}
+
+// Error Response
+{
+    "success": false,
+    "error": {
+        "code": "ERROR_CODE",
+        "message": "Mô tả lỗi chi tiết"
+    }
+}
+```
