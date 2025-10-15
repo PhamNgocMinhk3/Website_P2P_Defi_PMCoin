@@ -434,3 +434,342 @@ curl -X POST "http://localhost:5000/api/p2p/orders" \
     }
 }
 ```
+
+## 8. Ví Dụ Sử Dụng Tính Năng
+
+### 8.1. Hệ Thống Game
+
+#### Tham Gia Phiên Game
+```typescript
+// Frontend (game.service.ts)
+export class GameService {
+  joinSession(sessionId: string) {
+    // Kết nối đến GameHub
+    this.hubConnection.start()
+      .then(() => {
+        // Đăng ký nhận updates
+        this.hubConnection.on("PriceUpdate", (price: number) => {
+          this.currentPrice$.next(price);
+        });
+        
+        // Tham gia phiên
+        return this.http.post(`/api/game/session/${sessionId}/join`, {});
+      });
+  }
+
+  placeBet(bet: GameBet) {
+    return this.http.post('/api/game/bet', {
+      sessionId: bet.sessionId,
+      amount: bet.amount,
+      direction: bet.direction, // "UP" hoặc "DOWN"
+      leverage: bet.leverage
+    });
+  }
+}
+
+// Sử dụng trong component
+this.gameService.joinSession("session123")
+  .subscribe({
+    next: () => console.log("Đã tham gia phiên"),
+    error: (err) => console.error("Lỗi:", err)
+  });
+```
+
+#### Xử Lý Kết Quả Game
+```csharp
+// Backend (GameController.cs)
+[ApiController]
+public class GameController : ControllerBase
+{
+    private readonly IGameSessionManagementService _gameService;
+    private readonly IHubContext<GameHub> _hubContext;
+
+    [HttpPost("game/bet/result")]
+    public async Task<IActionResult> ProcessBetResult(string sessionId)
+    {
+        var result = await _gameService.CalculateSessionResult(sessionId);
+        
+        // Thông báo kết quả cho tất cả người chơi
+        await _hubContext.Clients.Group(sessionId)
+            .SendAsync("SessionResult", new {
+                SessionId = sessionId,
+                FinalPrice = result.FinalPrice,
+                Winners = result.Winners
+            });
+
+        return Ok(result);
+    }
+}
+```
+
+### 8.2. Hệ Thống Chat
+
+#### Tạo Nhóm Chat
+```typescript
+// Frontend
+const newGroup = {
+  name: "Trading Group #1",
+  members: ["user1", "user2", "user3"],
+  type: "PUBLIC"
+};
+
+this.chatService.createGroup(newGroup).subscribe(
+  response => {
+    console.log("Nhóm đã được tạo:", response);
+    this.joinChatRoom(response.groupId);
+  }
+);
+```
+
+#### Xử Lý Tin Nhắn Real-time
+```csharp
+// Backend (ChatHub.cs)
+public class ChatHub : Hub
+{
+    public async Task SendMessage(string roomId, string message)
+    {
+        var user = Context.User;
+        var messageDto = new MessageDto
+        {
+            Content = message,
+            SenderId = user.GetUserId(),
+            RoomId = roomId,
+            Timestamp = DateTime.UtcNow
+        };
+
+        // Lưu tin nhắn
+        await _chatService.SaveMessage(messageDto);
+
+        // Gửi cho tất cả thành viên trong phòng
+        await Clients.Group(roomId).SendAsync("ReceiveMessage", messageDto);
+    }
+}
+```
+
+### 8.3. Tích Hợp Blockchain
+
+#### Kết Nối Ví MetaMask
+```typescript
+// Frontend (wallet.service.ts)
+async connectWallet() {
+  if (typeof window.ethereum !== 'undefined') {
+    try {
+      // Yêu cầu kết nối ví
+      const accounts = await window.ethereum.request({
+        method: 'eth_requestAccounts'
+      });
+      
+      // Khởi tạo provider và signer
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      
+      return {
+        address: accounts[0],
+        signer: signer
+      };
+    } catch (error) {
+      console.error('Lỗi kết nối ví:', error);
+    }
+  }
+}
+```
+
+#### Xử Lý Smart Contract
+```csharp
+// Backend (SmartContractService.cs)
+public class SmartContractService
+{
+    public async Task<TransactionReceipt> ProcessGamePayout(
+        string sessionId, 
+        List<Winner> winners)
+    {
+        var web3 = new Web3(_configuration["Blockchain:NodeUrl"]);
+        var contract = web3.Eth.GetContract(_abi, _contractAddress);
+        
+        // Gọi hàm trên smart contract
+        var receipt = await contract.GetFunction("distributePrizes")
+            .SendTransactionAndWaitForReceiptAsync(
+                _adminAddress,
+                new HexBigInteger(GasLimit),
+                new HexBigInteger(GasPrice),
+                new HexBigInteger(0),
+                winners.Select(w => w.Address).ToList(),
+                winners.Select(w => w.Amount).ToList()
+            );
+            
+        return receipt;
+    }
+}
+```
+
+## 9. Hướng Dẫn Triển Khai (CI/CD)
+
+### 9.1. Môi Trường Triển Khai
+
+#### Development
+- Local development environment
+- Database: PostgreSQL local
+- API URL: `http://localhost:5000`
+- Frontend URL: `http://localhost:4200`
+
+#### Staging
+- Azure App Service (Windows)
+- Database: Azure Database for PostgreSQL
+- API URL: `https://api-staging.datk.com`
+- Frontend URL: `https://staging.datk.com`
+
+#### Production
+- Azure App Service (Windows)
+- Database: Azure Database for PostgreSQL
+- API URL: `https://api.datk.com`
+- Frontend URL: `https://datk.com`
+
+### 9.2. CI/CD Pipeline (Azure DevOps)
+
+```yaml
+trigger:
+  branches:
+    include:
+    - main
+    - develop
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+stages:
+- stage: Build
+  jobs:
+  - job: BuildBackend
+    steps:
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'restore'
+        projects: '**/Backend/*.csproj'
+        
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'build'
+        projects: '**/Backend/*.csproj'
+        arguments: '--configuration $(buildConfiguration)'
+
+  - job: BuildFrontend
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+    
+    - script: |
+        cd client-angular
+        npm install
+        npm run build:prod
+
+- stage: Test
+  jobs:
+  - job: TestBackend
+    steps:
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'test'
+        projects: '**/*Tests/*.csproj'
+        
+  - job: TestFrontend
+    steps:
+    - script: |
+        cd client-angular
+        npm run test:ci
+
+- stage: Deploy
+  jobs:
+  - deployment: DeployToStaging
+    environment: 'staging'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureWebApp@1
+            inputs:
+              azureSubscription: '$(Azure.ServiceConnection)'
+              appName: 'datk-api-staging'
+              package: '$(System.DefaultWorkingDirectory)/**/*.zip'
+```
+
+### 9.3. Cấu Hình Production
+
+#### Backend (appsettings.Production.json)
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=prod-db.postgres.database.azure.com;Database=datk_prod;"
+  },
+  "JWT": {
+    "ValidAudience": "https://datk.com",
+    "ValidIssuer": "https://api.datk.com"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning"
+    }
+  },
+  "AllowedHosts": "datk.com",
+  "CORS": {
+    "Origins": [
+      "https://datk.com",
+      "https://www.datk.com"
+    ]
+  }
+}
+```
+
+#### Frontend (environment.prod.ts)
+```typescript
+export const environment = {
+  production: true,
+  apiUrl: 'https://api.datk.com',
+  wsUrl: 'wss://api.datk.com/hubs',
+  blockchain: {
+    networkId: 1,
+    contractAddress: '0x...'
+  }
+};
+```
+
+### 9.4. Monitoring và Logging
+
+#### Application Insights
+```csharp
+// Program.cs
+builder.Services.AddApplicationInsightsTelemetry();
+
+// Logging trong controllers
+public class GameController : ControllerBase
+{
+    private readonly ILogger<GameController> _logger;
+    
+    [HttpPost("bet")]
+    public async Task<IActionResult> PlaceBet(BetRequest request)
+    {
+        try
+        {
+            _logger.LogInformation(
+                "Đặt cược mới: UserId={UserId}, Amount={Amount}", 
+                User.GetUserId(), 
+                request.Amount
+            );
+            // Xử lý đặt cược
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Lỗi khi đặt cược: UserId={UserId}, Error={Error}",
+                User.GetUserId(),
+                ex.Message
+            );
+            throw;
+        }
+    }
+}
+```
