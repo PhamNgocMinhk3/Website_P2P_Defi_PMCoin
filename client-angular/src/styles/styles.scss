@@ -1,0 +1,25 @@
+/* You can add global styles to this file, and also import other style files */
+
+/* Thêm các styles global tùy chỉnh tại đây */
+body {
+  background-color: #f3f4f6; /* fallback bg-gray-100 */
+}
+
+/* Kiểu cho thanh cuộn */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c4b5fd; // Màu tím nhạt cho thanh cuộn
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a78bfa; // Màu tím đậm hơn khi hover
+}

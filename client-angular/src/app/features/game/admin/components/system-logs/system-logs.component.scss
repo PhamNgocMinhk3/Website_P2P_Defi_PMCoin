@@ -1,0 +1,286 @@
+// --- 1. THEME & COLOR VARIABLES (REBUILT - V4 "PURPLE-CENTRIC" THEME) ---
+// A modern, professional theme with Purple as the dominant color, as requested.
+// Colors are chosen based on color harmony principles (split-complementary).
+:host {
+  // Backgrounds & Surfaces (NO BLACK)
+  --bg-main: #5d5a7a; // Very dark, desaturated violet
+  --bg-panel: #7671a4; // Dark slate blue/purple
+  --bg-input: #bcc0d3; // Muted purple for input backgrounds
+  --bg-hover: rgba(204, 250, 139, 0.2); // A lighter, more noticeable lavender hover.
+
+  // Borders & Dividers
+  --border-color: rgba(167, 139, 250, 0.25); // Soft lavender border
+  --border-focus: #d1fa8b; // A vibrant, accessible lavender for focus
+
+  // Typography
+  --text-primary: #E0DDFE; // Light lavender-white for high readability
+  --text-secondary: #827DAA; // Muted purple-gray for labels
+
+  // Accent & Semantic Colors (Based on a color triangle with purple)
+  --accent-primary: #7C3AED; // The main vibrant purple
+  --accent-primary-hover: #4b5c7e;
+  --color-green: #34D399; // Teal/Mint (Complementary to purple)
+  --color-pink: #F472B6; // Vibrant Pink
+  --color-purple-light: #A78BFA; // Lighter purple for highlights
+  --color-amber: #FBBF24; // Amber/Gold (Complementary to purple)
+}
+
+// --- 2. BASE & WRAPPER STYLES ---
+.system-logs-wrapper {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  padding: clamp(24px, 4vw, 32px) clamp(24px, 4vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+// --- 3. COMPONENT: HEADER ---
+.header-section {
+  .page-title { font-size: 28px; font-weight: 700; color: var(--text-primary); }
+  .page-subtitle { font-size: 16px; color: var(--text-secondary); max-width: 65ch; }
+}
+
+// --- 4. COMPONENT: PANELS ---
+.filter-panel,
+.data-table-panel {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(18, 16, 44, 0.5);
+}
+
+// --- 5. LAYOUT: FILTER CONTROLS ---
+.filter-panel {
+  padding: 24px;
+  .panel-header {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    .panel-title { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+  }
+
+  .filters-layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    // FIX: Change alignment to 'baseline' to perfectly align the button with the form fields' text line.
+    align-items: baseline;
+  }
+  
+  .filter-field {
+    flex: 1 1 auto;
+  }
+
+  .date-field {
+    min-width: 220px;
+  }
+  
+  .event-type-field {
+    min-width: 220px;
+  }
+
+  .search-address-field {
+    min-width: 280px;
+  }
+
+  .apply-button {
+    flex: 0 0 auto;
+    height: 56px;
+    background-color: var(--accent-primary);
+    color: white;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    padding: 0 24px;
+    box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+    &:hover {
+      background-color: var(--accent-primary-hover);
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+    }
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+}
+
+// --- 6. COMPONENT: DATA TABLE ---
+.data-table-panel {
+  padding: 8px;
+  position: relative;
+  overflow-x: auto;
+  .mat-table { width: 100%; background: transparent; }
+  .mat-header-cell, .mat-cell {
+    border-bottom: 1px solid var(--border-color);
+    padding: 16px;
+  }
+  .mat-header-cell {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .mat-row:hover { background-color: var(--bg-hover); }
+  .mat-row:last-of-type .mat-cell { border-bottom: none; }
+  .transaction-link {
+    color: var(--border-focus);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+    &:hover { text-decoration: underline; }
+  }
+  .address-text, .amount-cell { font-family: 'SF Mono', 'Fira Code', monospace; }
+}
+
+// --- 7. COMPONENT: EVENT CHIPS ---
+.event-chip {
+  padding: 5px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  background-color: var(--chip-bg);
+  color: var(--chip-color);
+
+  &.deposit    { --chip-color: var(--color-green);  --chip-bg: rgba(52, 211, 153, 0.15); }
+  &.withdrawal { --chip-color: var(--color-pink);   --chip-bg: rgba(244, 114, 182, 0.15); }
+  &.bet        { --chip-color: var(--accent-primary-hover); --chip-bg: rgba(139, 92, 246, 0.15); }
+  &.resolved   { --chip-color: var(--color-purple-light); --chip-bg: rgba(167, 139, 250, 0.15); }
+  &.emergency  { --chip-color: var(--color-amber);  --chip-bg: rgba(251, 191, 36, 0.15); }
+}
+
+// --- 8. ANGULAR MATERIAL OVERRIDES (PURPLE THEME) ---
+
+// Definitive fix for Dropdown, Datepicker, Tooltip Panels
+::ng-deep .cdk-overlay-pane {
+  // FIX: Target the specific MDC class for mat-select panels to ensure background is applied.
+  .mat-mdc-select-panel,
+  .mat-datepicker-content-container,
+  .mat-tooltip-panel {
+    background-color: #2F2B55 !important; // A slightly lighter, more saturated purple for popups
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 0 16px 48px rgba(18, 16, 44, 0.7) !important;
+    border-radius: 12px !important;
+    backdrop-filter: blur(12px);
+  }
+
+  .mat-option {
+    color: var(--text-primary) !important;
+    &:hover:not(.mat-option-disabled) { background-color: var(--bg-hover) !important; }
+    &.mat-selected:not(.mat-option-multiple) {
+      background: rgba(167, 139, 250, 0.15) !important;
+      color: var(--border-focus) !important;
+    }
+  }
+
+  .mat-calendar {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+    .mat-calendar-body-cell-content:hover { background-color: var(--bg-hover) !important; border-radius: 50%; }
+    .mat-calendar-body-selected { background: var(--border-focus) !important; color: white !important; border-radius: 50%; }
+    .mat-calendar-arrow, .mat-calendar-period-button { color: var(--text-primary) !important; }
+    .mat-calendar-table-header th { color: var(--text-secondary); }
+  }
+
+  .mat-tooltip {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+    font-size: 13px !important;
+  }
+}
+
+// --- 9. OVERRIDE: FORM FIELDS ---
+:host ::ng-deep .filter-field.mat-form-field {
+  .mat-form-field-wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .mat-form-field-flex {
+    background-color: var(--bg-input) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    height: 56px;
+    align-items: center;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .mat-form-field-infix {
+    padding: 0 16px !important;
+    border-top: 8px solid transparent !important;
+  }
+
+  .mat-form-field-outline-start,
+  .mat-form-field-outline-end,
+  .mat-form-field-outline-gap {
+    border: none !important;
+  }
+
+  &.mat-focused .mat-form-field-flex {
+    border-color: var(--border-focus) !important;
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.4);
+  }
+
+  .mat-form-field-label { color: var(--text-secondary) !important; }
+  &.mat-focused .mat-form-field-label { color: var(--border-focus) !important; }
+
+  .mat-input-element,
+  .mat-select-value,
+  .mat-select-arrow,
+  .mat-datepicker-toggle-default-icon {
+    color: var(--text-primary) !important;
+  }
+}
+
+// --- 10. OVERRIDE: PAGINATOR ---
+:host ::ng-deep .data-table-panel .mat-paginator {
+  background-color: transparent !important;
+  border-top: 1px solid var(--border-color) !important;
+  color: var(--text-secondary) !important;
+  font-size: 13px;
+
+  .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper {
+      background-color: var(--bg-input) !important;
+    }
+    .mat-mdc-select-value,
+    .mat-mdc-select-arrow,
+    .mdc-floating-label {
+      color: var(--text-secondary) !important;
+    }
+  }
+}
+
+// --- 11. RESPONSIVE ADJUSTMENTS ---
+@media (max-width: 768px) {
+  .system-logs-wrapper { gap: 16px; }
+  .filter-panel .filters-layout {
+    .filter-field,
+    .search-address-field {
+      flex-basis: 100%;
+      min-width: 0;
+    }
+    .apply-button {
+      width: 100%;
+    }
+  }
+}
+
+// --- 12. LOADING STATE ---
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(30, 27, 58, 0.7); // Loading overlay with purple tint
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: 12px;
+  transition: opacity 0.3s ease;
+  backdrop-filter: blur(4px);
+}

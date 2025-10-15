@@ -1,0 +1,112 @@
+<div class="register-container">
+
+
+  <!-- Main Content -->
+  <div class="register-content">
+    <!-- Register Form -->
+    <div class="register-form-container">
+      <div class="form-header">
+        <div class="logo-section">
+          <div class="logo-icon">
+            <i class="fas fa-user-plus"></i>
+          </div>
+          <h1 class="form-title">Join the Universe</h1>
+          <p class="form-subtitle">Create your cosmic account</p>
+        </div>
+      </div>
+
+      <form class="register-form" (ngSubmit)="onSubmit()" #registerForm="ngForm">
+        <!-- Name Fields Row -->
+        <div class="name-fields-row">
+          <div class="form-group half-width">
+            <label for="firstName" class="form-label">FIRST NAME</label>
+            <div class="input-container">
+              <i class="fas fa-user input-icon"></i>
+              <input type="text" id="firstName" name="firstName" [(ngModel)]="formData.firstName" class="form-input"
+                placeholder="Cao" required #firstNameInput="ngModel">
+            </div>
+          </div>
+
+          <div class="form-group half-width">
+            <label for="lastName" class="form-label">LAST NAME</label>
+            <div class="input-container">
+              <i class="fas fa-user input-icon"></i>
+              <input type="text" id="lastName" name="lastName" [(ngModel)]="formData.lastName" class="form-input"
+                placeholder="Tinay" required #lastNameInput="ngModel">
+            </div>
+          </div>
+        </div>
+
+        <!-- Email Field -->
+        <div class="form-group">
+          <label for="email" class="form-label">EMAIL ADDRESS</label>
+          <div class="input-container">
+            <i class="fas fa-envelope input-icon"></i>
+            <input type="email" id="email" name="email" [(ngModel)]="formData.email" class="form-input"
+              placeholder="caocopro1012@gmail.com" required>
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group">
+          <label for="password" class="form-label">PASSWORD</label>
+          <div class="input-container">
+            <i class="fas fa-lock input-icon"></i>
+            <input [type]="showPassword ? 'text' : 'password'" id="password" name="password"
+              [(ngModel)]="formData.password" class="form-input" placeholder="123Minh@" required minlength="6">
+            <button type="button" class="password-toggle" (click)="togglePasswordVisibility('password')">
+              <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
+          <div class="password-requirements">
+            <small>Mật khẩu phải có ít nhất 6 ký tự, bao gồm: chữ hoa, chữ thường, số và ký tự đặc biệt
+            </small>
+          </div>
+        </div>
+
+        <!-- Confirm Password Field -->
+        <div class="form-group">
+          <label for="confirmPassword" class="form-label">CONFIRM PASSWORD</label>
+          <div class="input-container">
+            <i class="fas fa-lock input-icon"></i>
+            <input [type]="showConfirmPassword ? 'text' : 'password'" id="confirmPassword" name="confirmPassword"
+              [(ngModel)]="formData.confirmPassword" class="form-input" placeholder="••••••••" required>
+            <button type="button" class="password-toggle" (click)="togglePasswordVisibility('confirmPassword')">
+              <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="submit-btn" [disabled]="!isFormValid() || isLoading" [class.loading]="isLoading">
+          <span class="btn-content" *ngIf="!isLoading">
+            <i class="fas fa-rocket"></i>
+            CREATE ACCOUNT
+          </span>
+          <span class="btn-loading" *ngIf="isLoading">
+            <div class="loading-spinner"></div>
+            Creating Account...
+          </span>
+        </button>
+      </form>
+
+      <!-- Login Link -->
+      <div class="form-footer">
+        <p class="login-prompt">
+          Already have an account?
+          <button type="button" class="login-link" (click)="navigateToLogin()">
+            Sign In
+          </button>
+        </p>
+      </div>
+    </div>
+
+    <!-- Decorative Elements -->
+    <div class="decorative-elements">
+      <div class="glow-orb glow-orb-1"></div>
+      <div class="glow-orb glow-orb-2"></div>
+      <div class="glow-orb glow-orb-3"></div>
+      <div class="glow-orb glow-orb-4"></div>
+    </div>
+  </div>
+</div>

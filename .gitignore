@@ -1,0 +1,74 @@
+# .NET Core
+bin/
+obj/
+.vs/
+*.user
+*.userosscache
+*.suo
+*.dbmdl
+*.jfm
+*.pfx
+*.publishsettings
+
+# Dependencies
+node_modules/
+.angular/
+dist/
+package-lock.json
+
+# Environment files
+.env
+appsettings.Development.json
+appsettings.Production.json
+environment.prod.ts
+environment.staging.ts
+
+# IDE
+.idea/
+.vscode/
+*.sln.iml
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Database
+*.db
+*.sqlite3
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Angular
+.angular/cache
+.sass-cache/
+connect.lock
+coverage/
+libpeerconnection.log
+testem.log
+typings/
+.angular-cli.json
+.ng-config.json
+
+# System Files
+.DS_Store
+Thumbs.db

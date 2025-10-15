@@ -1,0 +1,97 @@
+<div class="login-container">
+  <!-- Background Elements -->
+  <div class="background-elements">
+    <!-- Floating Particles -->
+    <div class="floating-particles">
+      <div class="floating-particle" *ngFor="let i of [].constructor(20); let idx = index"
+        [style.left.%]="(idx * 13.7) % 100" [style.top.%]="(idx * 17.3) % 100"
+        [style.animation-delay.s]="(idx * 0.2) % 4">
+      </div>
+    </div>
+
+    <!-- Geometric Shapes -->
+    <div class="geometric-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="login-content">
+    <!-- Login Form -->
+    <div class="login-form-container">
+      <div class="form-header">
+        <div class="logo-section">
+          <div class="logo-icon">
+            <i class="fas fa-rocket"></i>
+          </div>
+          <h1 class="form-title">Welcome Back</h1>
+          <p class="form-subtitle">Enter the crypto universe</p>
+        </div>
+      </div>
+
+      <form class="login-form" (ngSubmit)="onSubmit()" #loginForm="ngForm">
+        <!-- Email Field -->
+        <div class="form-group">
+          <label for="email" class="form-label">Email Address</label>
+          <div class="input-container">
+            <i class="fas fa-envelope input-icon"></i>
+            <input type="email" id="email" name="email" [(ngModel)]="email" class="form-input"
+              placeholder="Enter your email" required>
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <div class="input-container">
+            <i class="fas fa-lock input-icon"></i>
+            <input [type]="showPassword ? 'text' : 'password'" id="password" name="password" [(ngModel)]="password"
+              class="form-input" placeholder="Enter your password" required>
+            <button type="button" class="password-toggle" (click)="togglePasswordVisibility()">
+              <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Forgot Password Link -->
+        <div class="form-options">
+          <button type="button" class="forgot-password-link" (click)="navigateToForgotPassword()">
+            Forgot your password?
+          </button>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="submit-btn" [disabled]="loginForm.invalid || isLoading"
+          [class.loading]="isLoading">
+          <span class="btn-content" *ngIf="!isLoading">
+            <i class="fas fa-sign-in-alt"></i>
+            Launch Into Chat
+          </span>
+          <span class="btn-loading" *ngIf="isLoading">
+            <div class="loading-spinner"></div>
+            Launching...
+          </span>
+        </button>
+      </form>
+
+      <!-- Register Link -->
+      <div class="form-footer">
+        <p class="register-prompt">
+          New to the universe?
+          <button type="button" class="register-link" (click)="navigateToRegister()">
+            Create Account
+          </button>
+        </p>
+      </div>
+    </div>
+
+    <!-- Decorative Elements -->
+    <div class="decorative-elements">
+      <div class="glow-orb glow-orb-1"></div>
+      <div class="glow-orb glow-orb-2"></div>
+      <div class="glow-orb glow-orb-3"></div>
+    </div>
+  </div>
+</div>

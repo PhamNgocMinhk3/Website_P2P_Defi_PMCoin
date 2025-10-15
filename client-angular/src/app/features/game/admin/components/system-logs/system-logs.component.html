@@ -1,0 +1,120 @@
+<div class="system-logs-wrapper">
+  <div class="header-section">
+    <h1 class="page-title">System & Transaction Logs</h1>
+    <p class="page-subtitle">Monitor all smart contract interactions and system events in real-time.</p>
+  </div>
+
+  <div class="filter-panel">
+    <div class="panel-header">
+      <span class="panel-title">Search Filters</span>
+    </div>
+    <!-- Rebuilt with more specific classes for better control -->
+    <div class="filters-layout">
+      <mat-form-field appearance="outline" class="filter-field date-field">
+        <mat-label>Start Date</mat-label>
+        <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" (dateChange)="applyAllFilters()">
+        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+      </mat-form-field>
+  
+      <mat-form-field appearance="outline" class="filter-field date-field">
+        <mat-label>End Date</mat-label>
+        <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" (dateChange)="applyAllFilters()">
+        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field event-type-field">
+        <mat-label>Event Type</mat-label>
+        <mat-select [(ngModel)]="selectedEventType" (selectionChange)="applyAllFilters()">
+          <mat-option [value]="''">All Events</mat-option>
+          <mat-option *ngFor="let type of eventTypes" [value]="type">
+            {{type}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+  
+      <mat-form-field appearance="outline" class="filter-field search-address-field">
+        <mat-label>Search by Address</mat-label>
+        <input matInput [(ngModel)]="searchAddress" placeholder="Enter address and press Enter" (keyup.enter)="applyAllFilters()">
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" class="apply-button" (click)="applyAllFilters()">
+        Apply Filter
+      </button>
+    </div>
+  </div>
+
+  <div class="loading-overlay" *ngIf="isLoading">
+    <mat-spinner diameter="50"></mat-spinner>
+  </div>
+
+  <div class="data-table-panel" [class.loading]="isLoading">
+    <table mat-table [dataSource]="dataSource" matSort>
+      <ng-container matColumnDef="eventType">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Event</th>
+        <td mat-cell *matCellDef="let log">
+          <span class="event-chip" [ngClass]="getEventTypeClass(log.eventType)">
+            {{log.eventType}}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="transactionHash">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Transaction</th>
+        <td mat-cell *matCellDef="let log">
+          <a [href]="'https://scan.test.btcs.network/tx/' + log.transactionHash"
+             target="_blank"
+             matTooltip="View on Core Scan (Testnet)"
+             class="transaction-link">
+            {{formatAddress(log.transactionHash)}}
+          </a>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="fromAddress">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>From</th>
+        <td mat-cell *matCellDef="let log">
+          <span matTooltip="{{log.fromAddress}}" class="address-text">
+            {{formatAddress(log.fromAddress)}}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="toAddress">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>To</th>
+        <td mat-cell *matCellDef="let log">
+          <span matTooltip="{{log.toAddress}}" class="address-text">
+            {{formatAddress(log.toAddress)}}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="amount">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Amount</th>
+        <td mat-cell *matCellDef="let log" class="amount-cell">
+          {{formatAmount(log.amount)}} PM
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="timestamp">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Time</th>
+        <td mat-cell *matCellDef="let log">
+          {{formatTimestamp(log.timestamp)}}
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell no-data-message" [attr.colspan]="displayedColumns.length">
+          No data matching your filter criteria.
+        </td>
+      </tr>
+    </table>
+
+    <mat-paginator [pageSize]="15" [pageSizeOptions]="[10, 15, 25, 100]">
+    </mat-paginator>
+  </div>
+</div>

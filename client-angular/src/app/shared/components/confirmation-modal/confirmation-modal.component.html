@@ -1,0 +1,30 @@
+@if (isVisible) {
+<div class="modal-overlay" (click)="onBackdropClick($event)">
+  <div class="modal-container">
+    <!-- Header -->
+    <div class="modal-header" [ngClass]="getHeaderClass()">
+      <div class="header-content">
+        <div class="icon-container">
+          <i [ngClass]="getIconClass()"></i>
+        </div>
+        <h3 class="modal-title">{{ data.title }}</h3>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      <div class="message-content" [innerHTML]="data.message"></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="onCancel()">
+        {{ data.cancelText || 'Hủy' }}
+      </button>
+      <button type="button" class="btn-confirm" [ngClass]="getConfirmButtonClass()" (click)="onConfirm()">
+        {{ data.confirmText || 'Xác nhận' }}
+      </button>
+    </div>
+  </div>
+</div>
+}

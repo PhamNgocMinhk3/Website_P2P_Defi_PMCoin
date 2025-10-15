@@ -1,0 +1,31 @@
+<div *ngIf="user" class="flex items-center justify-between p-4 border-b border-gray-200 bg-white shadow-sm">
+    <div class="flex items-center space-x-4">
+        <img [src]="user.avatar || ('https://ui-avatars.com/api/?name=' + (user.name ? user.name.charAt(0) : '') + '&background=random&color=fff&size=128')"
+            alt="User profile picture" class="w-10 h-10 rounded-full" />
+        <div>
+            <h2 class="font-semibold">{{ user.name }}</h2>
+            <!-- Hiển thị trạng thái online/offline cho chat 1-1 -->
+            <p *ngIf="!user.isGroup && user.showOnlineStatus" class="text-sm font-medium"
+                [ngClass]="user.isOnline ? 'text-green-500' : 'text-gray-500'">
+                {{ user.isOnline ? 'Online' : 'Offline' }}
+            </p>
+        </div>
+    </div>
+    <div class="flex items-center space-x-4">
+        <button (click)="openSearchModal.emit()" class="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            title="Tìm kiếm tin nhắn">
+            <i class="fas fa-search text-gray-500"></i>
+        </button>
+        <button *ngIf="!isGroupCall" (click)="startAudioCall.emit()" aria-label="Gọi âm thanh" title="Gọi âm thanh" 
+            class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <i class="fas fa-phone text-gray-500"></i>
+        </button>
+        <button *ngIf="!isGroupCall" (click)="startVideoCall.emit()" aria-label="Gọi video" title="Gọi video" 
+            class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <i class="fas fa-video text-gray-500"></i>
+        </button>
+        <button (click)="toggleInfoSidebar.emit()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <i class="fas fa-info-circle text-gray-500"></i>
+        </button>
+    </div>
+</div>

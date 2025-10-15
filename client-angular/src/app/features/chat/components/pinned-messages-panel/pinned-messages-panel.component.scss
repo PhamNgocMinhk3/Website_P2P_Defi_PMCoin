@@ -1,0 +1,270 @@
+.pinned-messages-panel {
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  animation: slideDown 0.3s ease-out;
+
+  .panel-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      .pin-icon {
+        color: #fbbf24;
+        font-size: 0.875rem;
+        transform: rotate(45deg);
+      }
+
+      .header-text {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .pinned-messages-list {
+    max-height: 200px;
+    overflow-y: auto;
+
+    .pinned-message-item {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(4px);
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .message-preview {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+
+        .message-content {
+          flex: 1;
+          min-width: 0;
+
+          .message-text {
+            color: #ffffff;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .message-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+
+            .sender-name {
+              font-weight: 500;
+              color: rgba(255, 255, 255, 0.8);
+            }
+
+            .separator {
+              color: rgba(255, 255, 255, 0.4);
+            }
+
+            .pin-time {
+              color: rgba(255, 255, 255, 0.6);
+            }
+          }
+        }
+
+        .unpin-btn {
+          background: none;
+          border: none;
+          color: rgba(255, 255, 255, 0.5);
+          cursor: pointer;
+          padding: 0.5rem;
+          border-radius: 50%;
+          transition: all 0.3s ease;
+          opacity: 0;
+
+          &:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            transform: scale(1.1);
+          }
+
+          i {
+            font-size: 0.75rem;
+          }
+        }
+      }
+
+      &:hover .unpin-btn {
+        opacity: 1;
+      }
+
+      .message-type-icon {
+        margin-left: 0.75rem;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+        flex-shrink: 0;
+      }
+    }
+  }
+
+  .limit-warning {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 193, 7, 0.1);
+    border-top: 1px solid rgba(255, 193, 7, 0.2);
+    color: #fbbf24;
+    font-size: 0.75rem;
+
+    i {
+      font-size: 0.75rem;
+    }
+
+    span {
+      line-height: 1.4;
+    }
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 300px;
+  }
+}
+
+// Custom scrollbar for pinned messages list
+.pinned-messages-list {
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .pinned-messages-panel {
+    .panel-header {
+      padding: 0.5rem 0.75rem;
+
+      .header-content {
+        .header-text {
+          font-size: 0.8125rem;
+        }
+      }
+    }
+
+    .pinned-messages-list {
+      max-height: 150px;
+
+      .pinned-message-item {
+        padding: 0.5rem 0.75rem;
+
+        .message-preview {
+          gap: 0.75rem;
+
+          .message-content {
+            .message-text {
+              font-size: 0.8125rem;
+            }
+
+            .message-meta {
+              font-size: 0.6875rem;
+            }
+          }
+        }
+
+        .message-type-icon {
+          margin-left: 0.5rem;
+          font-size: 0.8125rem;
+        }
+      }
+    }
+
+    .limit-warning {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.6875rem;
+    }
+  }
+}
+
+// Dark theme enhancements
+@media (prefers-color-scheme: dark) {
+  .pinned-messages-panel {
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom-color: rgba(255, 255, 255, 0.15);
+  }
+}
+
+// High contrast mode
+@media (prefers-contrast: high) {
+  .pinned-messages-panel {
+    border-bottom-width: 2px;
+
+    .pinned-messages-list .pinned-message-item {
+      border-bottom-width: 1px;
+    }
+  }
+}
+
+// Reduced motion
+@media (prefers-reduced-motion: reduce) {
+  .pinned-messages-panel {
+    animation: none;
+  }
+
+  .pinned-messages-list .pinned-message-item {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+
+  .unpin-btn {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+}

@@ -1,0 +1,54 @@
+<div *ngIf="displayMessages.length > 0" class="pinned-messages-panel">
+  <div class="panel-header">
+    <div class="header-content">
+      <i class="fas fa-thumbtack pin-icon"></i>
+      <span class="header-text">{{ displayMessages.length }} tin nhắn đã ghim</span>
+    </div>
+  </div>
+
+  <div class="pinned-messages-list">
+    <div 
+      *ngFor="let message of displayMessages; let i = index; trackBy: trackByMessageId"
+      class="pinned-message-item"
+      (click)="onMessageClick(message.id)"
+    >
+      <!-- Message Content Preview -->
+      <div class="message-preview">
+        <div class="message-content">
+          <div class="message-text">{{ getMessagePreview(message) }}</div>
+          <div class="message-meta">
+            <span class="sender-name">{{ getSenderName(message) }}</span>
+            <span class="separator">•</span>
+            <span class="pin-time">{{ formatPinTime(getPinnedMessageData(message.id)!) }}</span>
+          </div>
+        </div>
+        
+        <!-- Unpin Button -->
+        <button 
+          class="unpin-btn"
+          (click)="onUnpinClick(message.id, $event)"
+          title="Bỏ ghim"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Message Type Icon -->
+      <div class="message-type-icon" [ngSwitch]="message.type">
+        <i *ngSwitchCase="'image'" class="fas fa-image"></i>
+        <i *ngSwitchCase="'file'" class="fas fa-paperclip"></i>
+        <i *ngSwitchCase="'audio'" class="fas fa-microphone"></i>
+        <i *ngSwitchCase="'poll'" class="fas fa-poll"></i>
+        <i *ngSwitchCase="'gif'" class="fas fa-film"></i>
+        <i *ngSwitchCase="'appointment'" class="fas fa-calendar"></i>
+        <i *ngSwitchDefault class="fas fa-comment"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Show limit warning when at max -->
+  <div *ngIf="displayMessages.length >= 3" class="limit-warning">
+    <i class="fas fa-info-circle"></i>
+    <span>Tối đa 3 tin nhắn ghim. Ghim tin nhắn mới sẽ thay thế tin nhắn cũ nhất.</span>
+  </div>
+</div>

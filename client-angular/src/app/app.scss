@@ -1,0 +1,30 @@
+/* src/styles.scss */
+
+// 1. Import AOS and Google Fonts at the top
+@import 'aos/dist/aos.css';
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap&subset=vietnamese");
+
+// 2. Define a global color and font palette
+:root {
+  --purple-primary: #8b5cf6;
+  --purple-secondary: #a78bfa;
+  --text-primary: #f8fafc;     /* A softer, brighter white for main text */
+  --text-secondary: #a0aec0;   /* A refined, light gray for subtitles */
+  --dark-background: #0c0a1a;  /* Your main background color */
+  --glass-bg: rgba(26, 26, 46, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --font-main: "Inter", sans-serif;
+}
+
+// 3. Apply base styles to the entire document
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  background-color: var(--dark-background);
+  font-family: var(--font-main);
+
+  /* THIS IS THE FIX: Set the default text color for the whole app */
+  color: var(--text-primary);
+}

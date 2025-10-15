@@ -1,0 +1,842 @@
+<div class="p2p-container">
+  <!-- Notification Toast -->
+  @if (notification.type) {
+  <div
+    class="fixed top-4 right-4 z-50 max-w-sm w-full bg-white rounded-lg shadow-lg border-l-4 p-4 transition-all duration-300 ease-in-out"
+    [ngClass]="{
+           'border-green-500': notification.type === 'success',
+           'border-red-500': notification.type === 'error',
+           'border-blue-500': notification.type === 'info'
+         }">
+    <div class="flex items-center">
+      <div class="flex-shrink-0">
+        <i class="fas text-lg" [ngClass]="{
+               'fa-check-circle text-green-500': notification.type === 'success',
+               'fa-exclamation-circle text-red-500': notification.type === 'error',
+               'fa-info-circle text-blue-500': notification.type === 'info'
+             }"></i>
+      </div>
+      <div class="ml-3 flex-1">
+        <p class="text-sm font-medium text-gray-900">{{ notification.message }}</p>
+      </div>
+      <div class="ml-4 flex-shrink-0">
+        <button type="button" (click)="clearNotification()"
+          class="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition ease-in-out duration-150">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Professional Header -->
+  <header class="header-modern">
+    <div class="header-container">
+      <!-- Left: Brand & Title -->
+      <div class="header-brand">
+        <div class="brand-icon">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="14" stroke="url(#gradient)" stroke-width="2" />
+            <path d="M12 16L14.5 18.5L20 13" stroke="url(#gradient)" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
+            <defs>
+              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#4F46E5" />
+                <stop offset="100%" style="stop-color:#7C3AED" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">P2P Exchange</h1>
+          <p class="brand-subtitle">Decentralized Trading Platform</p>
+        </div>
+      </div>
+
+      <!-- Center: Status Indicators -->
+      <div class="header-status">
+        <div class="status-group">
+          <div class="status-item">
+            <div class="status-indicator" [class.active]="useWeb3Mode">
+              <div class="indicator-dot"></div>
+            </div>
+            <span class="status-label">{{ useWeb3Mode ? 'Web3 Mode' : 'API Mode' }}</span>
+          </div>
+
+          <div class="status-item" *ngIf="useWeb3Mode">
+            <div class="status-indicator" [class.active]="getContractStatus().configured">
+              <div class="indicator-dot"></div>
+            </div>
+            <span class="status-label">Smart Contract</span>
+          </div>
+
+          <div class="status-item">
+            <div class="status-indicator" [class.active]="!!walletInfo">
+              <div class="indicator-dot"></div>
+            </div>
+            <span class="status-label">Wallet</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Wallet Section -->
+      <div class="header-wallet">
+        <!-- Not Connected -->
+        <div *ngIf="!walletInfo" class="wallet-connect-modern">
+          <button class="btn-connect-modern" (click)="connectWallet()" [disabled]="isConnectingWallet">
+            <div class="btn-icon" *ngIf="!isConnectingWallet">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path
+                  d="M17.5 6.25H15.625V4.375C15.625 2.09375 13.7812 0.25 11.5 0.25H4.375C2.09375 0.25 0.25 2.09375 0.25 4.375V15.625C0.25 17.9062 2.09375 19.75 4.375 19.75H15.625C17.9062 19.75 19.75 17.9062 19.75 15.625V8.125C19.75 7.09375 18.9062 6.25 17.5 6.25Z"
+                  fill="currentColor" />
+              </svg>
+            </div>
+            <div class="loading-spinner" *ngIf="isConnectingWallet"></div>
+            <span class="btn-text">{{ isConnectingWallet ? 'Connecting...' : 'Connect Wallet' }}</span>
+          </button>
+        </div>
+
+        <!-- Connected -->
+        <div *ngIf="walletInfo" class="wallet-connected">
+          <div class="wallet-info-card">
+            <div class="wallet-avatar">
+              <div class="avatar-gradient"></div>
+              <span class="avatar-text">{{ walletInfo.address.slice(2, 4).toUpperCase() }}</span>
+            </div>
+            <div class="wallet-details">
+              <div class="wallet-address">{{ formatAddress(walletInfo.address) }}</div>
+              <div class="wallet-balance">{{ formatBalance(walletInfo.balance) }} tCORE</div>
+            </div>
+          </div>
+          <button class="btn-disconnect-modern" (click)="disconnectWallet()">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode Toggle - Hidden -->
+    <div class="mode-toggle-container" style="display: none;">
+      <div class="mode-toggle">
+        <label class="toggle-switch">
+          <input type="checkbox" [(ngModel)]="useWeb3Mode">
+          <span class="toggle-slider">
+            <span class="toggle-label left">API</span>
+            <span class="toggle-label right">Web3</span>
+          </span>
+        </label>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tab Navigation -->
+  <div class="tab-navigation">
+    <button class="tab-button" [class.active]="activeTab === 'marketplace'" (click)="setActiveTab('marketplace')">
+      <span class="tab-icon">📋</span>
+      Thị trường
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'create'" (click)="setActiveTab('create')">
+      <span class="tab-icon">➕</span>
+      Tạo lệnh
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'my-orders'" (click)="setActiveTab('my-orders')"
+      [disabled]="!walletInfo">
+      <span class="tab-icon">📝</span>
+      Lệnh của tôi
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'history'" (click)="setActiveTab('history')"
+      [disabled]="!authService.isAuthenticated">
+      <span class="tab-icon">📊</span>
+      Lịch sử
+    </button>
+  </div>
+
+  <!-- Auth Warning -->
+  @if (!authService.isAuthenticated) {
+  <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 mx-4">
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+      </div>
+      <div class="ml-3">
+        <p class="text-sm text-yellow-700">
+          <strong>Cần đăng nhập:</strong> Vui lòng đăng nhập để sử dụng đầy đủ tính năng P2P Trading.
+        </p>
+        <div class="mt-2">
+          <button (click)="goToLogin()"
+            class="bg-yellow-400 hover:bg-yellow-500 text-yellow-800 px-3 py-1 rounded text-sm font-medium transition-colors">
+            Đăng nhập ngay
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Content Container -->
+  <div class="content-container">
+    <!-- Marketplace Tab -->
+    <div *ngIf="activeTab === 'marketplace'" class="marketplace-tab tab-content">
+
+      <!-- Filters and Refresh -->
+      <div class="filters-section">
+        <div class="filter-group">
+          <label for="sell-token-filter">Bán token:</label>
+          <select id="sell-token-filter" [(ngModel)]="filterSellToken" (change)="onFilterChange()"
+            class="filter-select">
+            <option value="all">Tất cả</option>
+            <option *ngFor="let token of availableTokens" [value]="token">
+              {{ getTokenIcon(token) }} {{ token }}
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="buy-token-filter">Mua token:</label>
+          <select id="buy-token-filter" [(ngModel)]="filterBuyToken" (change)="onFilterChange()" class="filter-select">
+            <option value="all">Tất cả</option>
+            <option *ngFor="let token of availableTokens" [value]="token">
+              {{ getTokenIcon(token) }} {{ token }}
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <button class="refresh-button" (click)="manualRefresh()" [disabled]="isLoading"
+            title="Làm mới danh sách orders">
+            <span class="refresh-icon" [class.spinning]="isLoading">🔄</span>
+            Làm mới
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="loading-state">
+        <div class="loading-spinner">⏳</div>
+        <p>Đang tải danh sách giao dịch...</p>
+      </div>
+
+      <!-- Modern Order Cards -->
+      <div *ngIf="!isLoading" class="orders-grid">
+        <div *ngFor="let order of getFilteredOrders(); trackBy: trackByOrderId" class="order-card-modern">
+
+          <!-- Card Header -->
+          <div class="card-header-modern">
+            <div class="trader-info">
+              <div class="trader-avatar">
+                <div class="avatar-bg"></div>
+                <span class="avatar-initials">{{ getOrderWalletAddress(order).slice(2, 4).toUpperCase() }}</span>
+              </div>
+              <div class="trader-details">
+                <div class="trader-name">{{ getOrderUserName(order) }}</div>
+                <div class="trader-address">{{ formatAddress(getOrderWalletAddress(order)) }}</div>
+              </div>
+            </div>
+            <div class="order-status-badge" [class]="'status-' + order.status.toLowerCase()">
+              <div class="status-dot"></div>
+              <span class="status-text">{{ getStatusText(order.status) }}</span>
+            </div>
+          </div>
+
+          <!-- Trading Pair -->
+          <div class="trading-pair">
+            <div class="token-from">
+              <div class="token-icon">{{ getTokenIcon(order.sellToken) }}</div>
+              <div class="token-info">
+                <div class="token-symbol">{{ order.sellToken }}</div>
+                <div class="token-amount">{{ formatNumber(getOrderAmount(order, 'sell')) }}</div>
+              </div>
+            </div>
+
+            <div class="swap-arrow">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </div>
+
+            <div class="token-to">
+              <div class="token-icon">{{ getTokenIcon(order.buyToken) }}</div>
+              <div class="token-info">
+                <div class="token-symbol">{{ order.buyToken }}</div>
+                <div class="token-amount">{{ formatNumber(getOrderAmount(order, 'buy')) }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Price & Details -->
+          <div class="order-details">
+            <div class="detail-row">
+              <span class="detail-label">Exchange Rate</span>
+              <span class="detail-value">{{ formatNumber(getOrderPrice(order)) }} {{ order.buyToken }}/{{
+                order.sellToken }}</span>
+            </div>
+
+            <div class="detail-row" *ngIf="getOrderTxHash(order)">
+              <span class="detail-label">Transaction</span>
+              <a [href]="'https://scan.coredao.org/tx/' + getOrderTxHash(order)" target="_blank" class="tx-link-modern">
+                <span>{{ getOrderTxHash(order)?.substring(0, 8) }}...{{ getOrderTxHash(order)?.substring(-6) }}</span>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M3.5 3.5H8.5V8.5M8.5 3.5L3.5 8.5" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="card-actions-modern">
+            <button class="btn-action secondary" (click)="onViewDetails(order)">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M8 3C4.5 3 1.73 5.11 1 8C1.73 10.89 4.5 13 8 13C11.5 13 14.27 10.89 15 8C14.27 5.11 11.5 3 8 3Z"
+                  stroke="currentColor" stroke-width="1.5" />
+                <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.5" />
+              </svg>
+              <span>Details</span>
+            </button>
+
+            <button *ngIf="canMatchOrder(order)" class="btn-action primary" (click)="onMatchOrder(order)"
+              [disabled]="isLoading || order.isMatching">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 1L15 8L8 15L1 8L8 1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+              </svg>
+              <span>{{ order.isMatching ? 'Matching...' : 'Match Order' }}</span>
+            </button>
+
+            <button *ngIf="canCancelOrder(order)" class="btn-action danger" (click)="onCancelOrder(order)"
+              [disabled]="isLoading">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+              </svg>
+              <span>Cancel</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="getFilteredOrders().length === 0" class="empty-state">
+          <div class="empty-icon">📭</div>
+          <h3>Không tìm thấy giao dịch</h3>
+          <p>Thử thay đổi bộ lọc hoặc tạo giao dịch mới</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Order Tab -->
+    <div *ngIf="activeTab === 'create'" class="create-tab tab-content">
+      <div class="create-form">
+        <h3 class="form-title">Tạo Lệnh Giao Dịch</h3>
+
+        <!-- Wallet Check -->
+        <div *ngIf="!walletInfo" class="wallet-required">
+          <p>⚠️ Vui lòng kết nối ví để tạo lệnh</p>
+          <button class="btn-connect-wallet" (click)="connectWallet()">🔗 Kết nối ví</button>
+        </div>
+
+        <!-- Create Form -->
+        <div *ngIf="walletInfo" class="order-form">
+          <div class="form-group">
+            <label>Token bán:</label>
+            <select [(ngModel)]="createForm.sellToken" (change)="onTokenChange()" class="form-select">
+              <option *ngFor="let token of availableTokens" [value]="token">
+                {{ getTokenIcon(token) }} {{ token }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Token nhận:</label>
+            <select [(ngModel)]="createForm.buyToken" (change)="onTokenChange()" class="form-select">
+              <option *ngFor="let token of availableTokens" [value]="token">
+                {{ getTokenIcon(token) }} {{ token }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Số lượng bán:</label>
+            <input type="number" [(ngModel)]="createForm.sellAmount" (input)="onSellAmountChange()" placeholder="0.0"
+              min="0" step="0.000001" class="form-input">
+          </div>
+
+          <div *ngIf="priceCalculation" class="price-calculation-card">
+            <div class="calculation-result">
+              <div class="receive-amount">
+                <span class="label">Nhận được:</span>
+                <span class="amount">{{ formatCurrency(priceCalculation.buyAmount, priceCalculation.buyToken) }}</span>
+              </div>
+              <div class="exchange-rate">
+                <span class="label">Tỷ giá:</span>
+                <span class="rate">{{ formatExchangeRate(priceCalculation.sellToken, priceCalculation.buyToken,
+                  priceCalculation.exchangeRate) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="isCalculatingPrice">⏳ Đang tính toán...</div>
+
+          <button class="btn-create-order-web3" (click)="onCreateOrder()"
+            [disabled]="isCreatingOrder || !priceCalculation">
+            <div class="btn-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" *ngIf="!isCreatingOrder">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+              </svg>
+              <div class="loading-spinner" *ngIf="isCreatingOrder">
+                <div class="spinner-ring"></div>
+              </div>
+            </div>
+            <span class="btn-text">
+              @if (isCreatingOrder) {
+              @if (useWeb3Mode) {
+              <span>🔄 Processing on Blockchain...</span>
+              } @else {
+              <span>Creating Order...</span>
+              }
+              } @else {
+              @if (useWeb3Mode) {
+              <span>🚀 Create Web3 Order</span>
+              } @else {
+              <span>Create Order</span>
+              }
+              }
+            </span>
+            <div class="btn-arrow" *ngIf="!isCreatingOrder">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- My Orders Tab -->
+    <div *ngIf="activeTab === 'my-orders'" class="my-orders-tab tab-content">
+      <div class="tab-header-modern">
+        <div class="header-content">
+          <h2 class="tab-title">My Orders</h2>
+          <p class="tab-subtitle">Manage your active trading orders</p>
+        </div>
+        <div class="header-stats" *ngIf="walletInfo">
+          <div class="stat-item">
+            <span class="stat-value">{{ myOrders.length }}</span>
+            <span class="stat-label">Active Orders</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Wallet Connected -->
+      <div *ngIf="!walletInfo" class="empty-state-modern">
+        <div class="empty-icon">
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+            <circle cx="32" cy="32" r="30" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4" />
+            <path d="M20 32H44M44 32L36 24M44 32L36 40" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </div>
+        <h3 class="empty-title">Wallet Required</h3>
+        <p class="empty-description">Connect your wallet to view and manage your orders</p>
+        <button class="btn-connect-modern" (click)="connectWallet()">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path
+              d="M17.5 6.25H15.625V4.375C15.625 2.09375 13.7812 0.25 11.5 0.25H4.375C2.09375 0.25 0.25 2.09375 0.25 4.375V15.625C0.25 17.9062 2.09375 19.75 4.375 19.75H15.625C17.9062 19.75 19.75 17.9062 19.75 15.625V8.125C19.75 7.09375 18.9062 6.25 17.5 6.25Z"
+              fill="currentColor" />
+          </svg>
+          <span>Connect Wallet</span>
+        </button>
+      </div>
+
+      <!-- No Orders -->
+      <div *ngIf="walletInfo && myOrders.length === 0" class="empty-state-modern">
+        <div class="empty-icon">
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+            <rect x="8" y="16" width="48" height="32" rx="4" stroke="currentColor" stroke-width="2" />
+            <path d="M16 24H48M16 32H32M16 40H40" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </div>
+        <h3 class="empty-title">No Orders Yet</h3>
+        <p class="empty-description">You haven't created any trading orders. Start by creating your first order.</p>
+        <button class="btn-connect-modern primary" (click)="setActiveTab('create')">
+          <div class="btn-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M10 4V16M4 10H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </div>
+          <span class="btn-text">Create First Order</span>
+        </button>
+      </div>
+
+      <!-- Orders List -->
+      <div *ngIf="walletInfo && myOrders.length > 0" class="my-orders-grid">
+        <div *ngFor="let order of myOrders; trackBy: trackByOrderId" class="my-order-card-modern">
+
+          <!-- Order Header -->
+          <div class="my-order-header">
+            <div class="order-id">
+              <span class="id-label">Order #</span>
+              <span class="id-value">{{ order.id.substring(0, 8) }}</span>
+            </div>
+            <div class="order-status-modern" [class]="'status-' + order.status.toLowerCase()">
+              <div class="status-indicator"></div>
+              <span class="status-text">{{ getStatusText(order.status) }}</span>
+            </div>
+          </div>
+
+          <!-- Trading Pair -->
+          <div class="my-order-pair">
+            <div class="pair-from">
+              <div class="token-icon-small">{{ getTokenIcon(order.sellToken) }}</div>
+              <div class="token-details">
+                <div class="token-symbol">{{ order.sellToken }}</div>
+                <div class="token-amount">{{ formatNumber(getOrderAmount(order, 'sell')) }}</div>
+              </div>
+            </div>
+
+            <div class="pair-arrow">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M4 10H16M16 10L12 6M16 10L12 14" stroke="currentColor" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+
+            <div class="pair-to">
+              <div class="token-icon-small">{{ getTokenIcon(order.buyToken) }}</div>
+              <div class="token-details">
+                <div class="token-symbol">{{ order.buyToken }}</div>
+                <div class="token-amount">{{ formatNumber(getOrderAmount(order, 'buy')) }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order Info -->
+          <div class="my-order-info">
+            <div class="info-row">
+              <span class="info-label">Rate</span>
+              <span class="info-value">{{ formatNumber(getOrderPrice(order)) }} {{ order.buyToken }}/{{ order.sellToken
+                }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Created</span>
+              <span class="info-value">{{ order.createdAt | date:'MMM d, y HH:mm' }}</span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="my-order-actions">
+            <button class="btn-action-small secondary" (click)="onViewDetails(order)">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path
+                  d="M7 2.5C4.5 2.5 2.23 4.11 1.5 7C2.23 9.89 4.5 11.5 7 11.5C9.5 11.5 11.77 9.89 12.5 7C11.77 4.11 9.5 2.5 7 2.5Z"
+                  stroke="currentColor" stroke-width="1.2" />
+                <circle cx="7" cy="7" r="1.5" stroke="currentColor" stroke-width="1.2" />
+              </svg>
+              <span>View Details</span>
+            </button>
+
+            <button *ngIf="canCancelOrder(order)" class="btn-action-small danger" (click)="onCancelOrder(order)">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="currentColor" stroke-width="1.2"
+                  stroke-linecap="round" />
+              </svg>
+              <span>Cancel Order</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transaction History Tab -->
+    <div *ngIf="activeTab === 'history'" class="history-tab tab-content">
+      <div class="tab-header-modern">
+        <div class="header-content">
+          <div class="header-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path d="M3 3v18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+              <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </div>
+          <div class="header-text">
+            <h2 class="tab-title">Transaction History</h2>
+            <p class="tab-subtitle">Track your completed trades and transactions</p>
+          </div>
+        </div>
+        <div class="header-stats" *ngIf="authService.isAuthenticated">
+          <div class="stat-item">
+            <div class="stat-icon">📊</div>
+            <div class="stat-content">
+              <span class="stat-value">{{ transactionHistory.length }}</span>
+              <span class="stat-label">Total Transactions</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon">💰</div>
+            <div class="stat-content">
+              <span class="stat-value">{{ getCompletedTransactionsCount() }}</span>
+              <span class="stat-label">Completed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Not Authenticated -->
+      <div *ngIf="!authService.isAuthenticated" class="empty-state-modern auth-required">
+        <div class="empty-icon">
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M18 8h-1V6a5 5 0 0 0-10 0v2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zM8.5 6a3.5 3.5 0 0 1 7 0v2h-7V6z"
+              fill="currentColor" />
+          </svg>
+        </div>
+        <h3 class="empty-title">🔐 Authentication Required</h3>
+        <p class="empty-description">Connect your wallet to view your transaction history and start trading</p>
+        <button class="btn-connect-modern" (click)="connectWallet()">
+          <span class="btn-icon">🦊</span>
+          <span>Connect Wallet</span>
+        </button>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="authService.isAuthenticated && isLoadingHistory" class="loading-state-modern">
+        <div class="loading-container">
+          <div class="loading-spinner-modern"></div>
+          <div class="loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+        <h3 class="loading-title">📊 Loading Transaction History</h3>
+        <p class="loading-description">Fetching your trading data from the blockchain...</p>
+      </div>
+
+      <!-- No Transactions -->
+      <div *ngIf="authService.isAuthenticated && !isLoadingHistory && transactionHistory.length === 0"
+        class="empty-state-modern no-transactions">
+        <div class="empty-icon">
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
+            <path d="M3 3v18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
+            <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
+            <circle cx="7" cy="14" r="1" fill="currentColor" />
+            <circle cx="11" cy="11" r="1" fill="currentColor" />
+            <circle cx="16" cy="6" r="1" fill="currentColor" />
+          </svg>
+        </div>
+        <h3 class="empty-title">📈 No Transactions Yet</h3>
+        <p class="empty-description">Start your trading journey! Create your first order and watch your transaction
+          history grow.</p>
+        <div class="empty-actions">
+          <button class="btn-connect-modern primary" (click)="setActiveTab('create')">
+            <div class="btn-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M10 4V16M4 10H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </div>
+            <span class="btn-text">Create First Trade</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Transaction List -->
+      <div *ngIf="authService.isAuthenticated && !isLoadingHistory && transactionHistory.length > 0"
+        class="transaction-list-dense">
+        <div *ngFor="let transaction of transactionHistory; trackBy: trackByTransactionId"
+          class="transaction-item-dense">
+
+          <!-- Transaction Header Row -->
+          <div class="transaction-header-row">
+            <div class="trade-summary">
+              <div class="trade-amounts">
+                <span class="sell-amount">
+                  <span class="amount">{{ formatNumber(transaction.sellAmount) }}</span>
+                  <span class="token">{{ transaction.sellToken }}</span>
+                </span>
+                <svg class="arrow-icon" width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12h14m-7-7l7 7-7 7" stroke="currentColor" stroke-width="2" />
+                </svg>
+                <span class="buy-amount">
+                  <span class="amount">{{ formatNumber(transaction.buyAmount) }}</span>
+                  <span class="token">{{ transaction.buyToken }}</span>
+                </span>
+              </div>
+            </div>
+
+            <div class="transaction-status">
+              <div class="status-indicator" [ngClass]="'status-' + transaction.status.toLowerCase()">
+                <div class="status-dot"></div>
+                <span class="status-text">{{ getTransactionStatusText(transaction.status) }}</span>
+              </div>
+              <div class="transaction-type-badge" [ngClass]="'type-' + transaction.transactionType.toLowerCase()">
+                {{ getTransactionTypeText(transaction.transactionType) }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Transaction Details Row -->
+          <div class="transaction-details-row">
+            <div class="transaction-info">
+              <div class="info-item">
+                <span class="info-label">Time:</span>
+                <span class="info-value">{{ transaction.transactionTime | date:'MMM d, h:mm a' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Seller:</span>
+                <span class="info-value address">{{ formatAddress(transaction.sellerAddress) }}</span>
+              </div>
+              <div class="info-item" *ngIf="transaction.buyerAddress">
+                <span class="info-label">Buyer:</span>
+                <span class="info-value address">{{ formatAddress(transaction.buyerAddress) }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">TX:</span>
+                <a [href]="getBlockExplorerUrl(transaction.txHash)" target="_blank" class="info-value tx-hash">
+                  {{ formatTxHash(transaction.txHash) }}
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                    <path d="M3.5 3.5H8.5V8.5M8.5 3.5L3.5 8.5" stroke="currentColor" stroke-width="1.5" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Details Modal -->
+@if (showOrderDetails && selectedOrder) {
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm p-4"
+  (click)="closeOrderDetails()">
+  <div
+    class="bg-gray-50 rounded-2xl shadow-2xl max-w-3xl w-full mx-4 max-h-[calc(100vh-2rem)] flex flex-col"
+    (click)="$event.stopPropagation()">
+
+    <div class="relative p-4 flex-shrink-0 flex items-center justify-between border-b border-gray-200">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-receipt text-white text-base"></i>
+        </div>
+        <div class="text-left">
+          <h3 class="text-lg font-bold text-gray-800">Chi Tiết Lệnh</h3>
+          <p class="text-xs text-gray-500 font-mono">ID: {{ selectedOrder.id }}</p>
+        </div>
+      </div>
+      <button (click)="closeOrderDetails()"
+        class="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
+        <i class="fas fa-times text-gray-600"></i>
+      </button>
+    </div>
+
+    <div class="p-6 overflow-y-auto flex-grow bg-white">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <div class="flex flex-col gap-4">
+          <div class="bg-gray-50 rounded-xl p-4 border border-gray-200 flex justify-between items-center">
+            <div>
+              <p class="text-sm font-medium text-gray-500">Bạn Bán</p>
+              <p class="text-2xl font-bold text-gray-800">{{ getSellAmount(selectedOrder) | number:'1.0-8' }}</p>
+            </div>
+            <div class="flex items-center gap-2 p-2 bg-red-100 rounded-lg">
+              <span class="text-lg font-bold text-red-700">{{ getTokenIcon(getSellToken(selectedOrder)) }}</span>
+              <span class="text-lg font-bold text-red-700">{{ getSellToken(selectedOrder) }}</span>
+            </div>
+          </div>
+
+          <div class="flex justify-center">
+            <div
+              class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg">
+              <i class="fas fa-arrow-down text-sm"></i>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 rounded-xl p-4 border border-gray-200 flex justify-between items-center">
+            <div>
+              <p class="text-sm font-medium text-gray-500">Bạn Nhận</p>
+              <p class="text-2xl font-bold text-gray-800">{{ getBuyAmount(selectedOrder) | number:'1.0-8' }}</p>
+            </div>
+            <div class="flex items-center gap-2 p-2 bg-green-100 rounded-lg">
+              <span class="text-lg font-bold text-green-700">{{ getTokenIcon(getBuyToken(selectedOrder)) }}</span>
+              <span class="text-lg font-bold text-green-700">{{ getBuyToken(selectedOrder) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-3">
+            <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <span class="text-sm text-gray-600 font-medium">Tỷ Giá</span>
+              <span class="font-bold text-gray-900 text-base">{{ selectedOrder.price | number:'1.0-6' }}</span>
+            </div>
+            <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <span class="text-sm text-gray-600 font-medium">Trạng Thái</span>
+              <span class="px-3 py-1 rounded-full text-xs font-bold" [ngClass]="{
+                  'bg-green-100 text-green-800': isActiveOrder(selectedOrder),
+                  'bg-yellow-100 text-yellow-800': getStatus(selectedOrder) === 'pending',
+                  'bg-red-100 text-red-800': getStatus(selectedOrder) === 'cancelled',
+                  'bg-blue-100 text-blue-800': getStatus(selectedOrder) === 'completed'
+                }">
+                {{ getStatusText(selectedOrder.status) }}
+              </span>
+            </div>
+            <div class="flex justify-between items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <span class="text-sm text-gray-600 font-medium flex-shrink-0">Người Tạo</span>
+              <div class="min-w-0" [title]="getTrader(selectedOrder)">
+                <p class="font-mono text-xs text-gray-700 bg-gray-200 px-2 py-1 rounded truncate">
+                  {{ getTrader(selectedOrder) }}
+                </p>
+              </div>
+            </div>
+            <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <span class="text-sm text-gray-600 font-medium">Thời Gian Tạo</span>
+              <span class="text-sm text-gray-900 font-semibold">{{ getTimestamp(selectedOrder) | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="px-6 py-4 flex-shrink-0 border-t border-gray-200 bg-gray-50">
+      <div class="flex gap-3" [ngClass]="{'justify-end': canMatchOrder(selectedOrder), 'justify-center': !canMatchOrder(selectedOrder)}">
+        <button (click)="closeOrderDetails()"
+          class="px-5 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-all duration-300 shadow-sm min-w-[120px]">
+          Đóng
+        </button>
+        @if (canMatchOrder(selectedOrder)) {
+        <button (click)="onMatchOrder(selectedOrder); closeOrderDetails()"
+          [disabled]="selectedOrder.isMatching"
+          class="px-5 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all duration-300 shadow-md min-w-[120px]">
+          {{ selectedOrder.isMatching ? 'Đang xử lý...' : 'Khớp Lệnh' }}
+        </button>
+        }
+      </div>
+    </div>
+
+  </div>
+</div>
+}
+<!-- OTP Modal for 2FA -->
+<app-otp-modal
+  [isVisible]="isOtpModalVisible"
+  (confirm)="onOtpConfirm($event)"
+  (cancel)="onOtpCancel()"
+  title="Xác thực hai yếu tố"
+  message="Một mã OTP đã được gửi đến email của bạn. Vui lòng nhập mã để tiếp tục."
+  confirmText="Xác nhận"
+  cancelText="Hủy">
+</app-otp-modal>
+
+  <!-- Confirmation Modal -->
+  <app-confirmation-modal [isVisible]="isConfirmationVisible" [data]="confirmationData"
+    (confirmed)="onConfirmationConfirmed()" (cancelled)="onConfirmationCancelled()">
+  </app-confirmation-modal>
+</div>

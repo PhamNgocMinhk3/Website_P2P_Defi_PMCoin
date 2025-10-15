@@ -1,0 +1,78 @@
+<div class="p-2">
+    <input type="text" placeholder="Tìm kiếm người dùng (theo địa chỉ ví...)"
+        class="w-full p-2 rounded-lg bg-gray-100 focus:outline-none" [(ngModel)]="searchTerm" minlength="40"
+        (ngModelChange)="onSearchTermChange($event)">
+
+    <!-- Create Group Button -->
+    <button class="create-group-btn" (click)="onCreateGroup()" title="Tạo nhóm mới">
+        <i class="fas fa-users"></i>
+        <span>Tạo nhóm</span>
+    </button>
+</div>
+
+<!-- Container for list content -->
+<div class="flex-1 overflow-y-auto">
+    <!-- Search Results View -->
+    <ng-container *ngIf="searchTerm.length >= 40">
+        <div *ngIf="(searchResults$ | async) as searchResults" class="search-results-container">
+            <div *ngIf="isSearching$ | async; else results" class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>Đang tìm kiếm...</p>
+            </div>
+            <ng-template #results>
+                <div *ngFor="let user of searchResults; trackBy: trackByUserId" class="chat-item search-result-item" (click)="onSelectUser(user)">
+                    <div class="avatar-container">
+                        <img [src]="user.avatar || 'https://st3.depositphotos.com/6672868/13701/v/450/depositphotos_137014128-stock-illustration-user-profile-icon.jpg'"
+                            alt="User Avatar" class="avatar-img">
+                        <div *ngIf="user.active" class="online-indicator"></div>
+                    </div>
+                    <div class="info-container">
+                        <h3 class="name">{{ user.name }}</h3>
+                        <p class="username">@{{ user.lastMessage }}</p>
+                    </div>
+                </div>
+                <div *ngIf="searchResults.length === 0" class="no-results-placeholder">
+                    <i class="fas fa-user-slash placeholder-icon"></i>
+                    <p>Không tìm thấy người dùng nào.</p>
+                </div>
+            </ng-template>
+        </div>
+    </ng-container>
+
+    <!-- Conversations View -->
+    <ng-container *ngIf="searchTerm.length < 40">
+        <div *ngIf="(conversations$ | async) as conversations; else noConversations">
+            <div *ngIf="conversations.length > 0; else noConversations">
+                <div *ngFor="let user of conversations; trackBy: trackByUserId" class="chat-item" [class.selected]="(selectedUser$ | async)?.id === user.id"
+                    (click)="onSelectUser(user)">
+                    <div class="avatar-container">
+                        <img [src]="user.avatar || ('https://ui-avatars.com/api/?name=' + (getDisplayName(user) | slice:0:1) + '&background=random&color=fff&size=128')" alt="User Avatar" class="avatar-img">
+                        <div *ngIf="user.unreadCount && user.unreadCount > 0" class="unread-badge">
+                            {{ user.unreadCount > 99 ? '99+' : user.unreadCount }}
+                        </div>
+                        <div *ngIf="user.isOnline" class="online-indicator"></div>
+                    </div>
+                    <div class="info-container">
+                        <div class="info-line">
+                            <h3 class="name" [class.unread]="user.hasUnreadMessages">{{ getDisplayName(user) }}</h3>
+                            <p class="time">{{ user.time }}</p>
+                        </div>
+                        <div class="info-line">
+                            <p class="last-message" [class.unread]="user.hasUnreadMessages">{{ user.lastMessage }}</p>
+                            <div *ngIf="user.hasUnreadMessages" class="new-message-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ng-container>
+</div>
+
+<!-- Placeholder when no conversations are available -->
+<ng-template #noConversations>
+    <div class="no-conversations-placeholder">
+        <i class="fas fa-search placeholder-icon"></i>
+        <h3 class="placeholder-title">Bắt đầu cuộc trò chuyện</h3>
+        <p class="placeholder-text">Tìm kiếm người dùng hoặc tạo nhóm mới để bắt đầu liên lạc.</p>
+    </div>
+</ng-template>

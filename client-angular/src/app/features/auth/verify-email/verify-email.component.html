@@ -1,0 +1,48 @@
+<div class="verify-email-container">
+  <div class="verify-email-content">
+    <!-- Loading State -->
+    <div class="verification-state" *ngIf="isLoading">
+      <div class="loading-icon">
+        <div class="loading-spinner"></div>
+      </div>
+      <h1 class="state-title">Đang xác thực email...</h1>
+      <p class="state-subtitle">Vui lòng đợi trong giây lát</p>
+    </div>
+
+    <!-- Success State -->
+    <div class="verification-state success" *ngIf="!isLoading && isSuccess">
+      <div class="success-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h1 class="state-title">Xác thực thành công!</h1>
+      <p class="state-subtitle">Email của bạn đã được xác thực thành công. Bạn có thể đăng nhập ngay bây giờ.</p>
+      
+      <div class="action-buttons">
+        <button class="primary-btn" (click)="navigateToLogin()">
+          <i class="fas fa-sign-in-alt"></i>
+          Đăng nhập ngay
+        </button>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div class="verification-state error" *ngIf="!isLoading && !isSuccess">
+      <div class="error-icon">
+        <i class="fas fa-times-circle"></i>
+      </div>
+      <h1 class="state-title">Xác thực thất bại</h1>
+      <p class="state-subtitle">{{ errorMessage }}</p>
+      
+      <div class="action-buttons">
+        <button class="primary-btn" (click)="navigateToRegister()">
+          <i class="fas fa-user-plus"></i>
+          Đăng ký lại
+        </button>
+        <button class="secondary-btn" (click)="navigateToLogin()">
+          <i class="fas fa-sign-in-alt"></i>
+          Đăng nhập
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

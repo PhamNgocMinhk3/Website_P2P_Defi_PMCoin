@@ -1,0 +1,164 @@
+<!-- BẢNG ĐIỀU KHIỂN ADMIN GAME PM - Bento Grid Layout -->
+<div class="admin-dashboard">
+  <!-- Bento Grid Layout -->
+  <div class="bento-grid">
+    
+    <!-- Bot Transactions Realtime - Enhanced UI -->
+    <div class="bento-item bot-transactions">
+      <div class="card-header">
+        <h3 class="card-title">🤖 GIAO DỊCH BOT REALTIME</h3>
+        <div class="transaction-status">
+          <div class="live-indicator">
+            <span class="pulse-dot"></span>
+            <span class="live-text">LIVE</span>
+          </div>
+          <div class="transaction-count">{{ botTransactions.length }}/6 giao dịch</div>
+        </div>
+      </div>
+
+      <div class="transactions-container">
+        @if (botTransactions.length > 0) {
+        <div class="transaction-list">
+          @for (transaction of botTransactions; track trackByTransactionId($index, transaction)) {
+          <div class="transaction-card" [class]="'transaction-' + transaction.action.toLowerCase()">
+            <div class="transaction-header">
+              <div class="bot-info">
+                <span class="bot-icon">🤖</span>
+                <span class="bot-address">{{ formatBotAddress(transaction.botAddress) }}</span>
+              </div>
+              <div class="action-indicator" [class]="'action-' + transaction.action.toLowerCase()">
+                <span class="action-icon">{{ transaction.action === 'BUY' ? '📈' : '📉' }}</span>
+                <span class="action-text">{{ transaction.action === 'BUY' ? 'MUA' : 'BÁN' }}</span>
+              </div>
+            </div>
+
+            <div class="transaction-details">
+              <div class="detail-row">
+                <div class="detail-item">
+                  <span class="detail-label">Số lượng : </span>
+                  <span class="detail-value amount">{{ formatAmount(transaction.amount) }} PM</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Giá : </span>
+                  <span class="detail-value price">${{ transaction.price | number:'1.4-4' }}</span>
+                </div>
+              </div>
+              <div class="transaction-time">
+                <span class="time-icon">⏱️</span>
+                <span class="time-text">{{ getTimeAgo(transaction.timestamp) }}</span>
+              </div>
+            </div>
+          </div>
+          }
+        </div>
+        } @else {
+        <div class="no-transactions">
+          <div class="no-data-icon">⏳</div>
+          <div class="no-data-text">Đang chờ giao dịch bot...</div>
+          <div class="loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- Danh Sách Đen -->
+    <div class="bento-item blacklist-users">
+      <div class="card-header">
+        <h3 class="card-title">🔴 DANH SÁCH ĐEN</h3>
+        <div class="user-count">{{ blacklistedUsers.length }} người dùng</div>
+      </div>
+      <div class="table-container">
+        @if (blacklistedUsers.length > 0) {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Địa Chỉ</th>
+              <th>Thắng Liên Tiếp</th>
+              <th>Trạng Thái</th>
+              <th>Hành Động</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of blacklistedUsers; track trackByAddress($index, user)) {
+            <tr>
+              <td>{{ formatAddress(user.address) }}</td>
+              <td>{{ user.consecutiveWins }} lần thắng</td>
+              <td>
+                <span class="status-badge status-force-lose">🔴 Ép Thua</span>
+              </td>
+              <td>
+                <button class="action-btn secondary" (click)="removeFromBlacklist(user.address)">Xóa</button>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+        } @else {
+        <div class="no-data">Không có người dùng trong danh sách đen</div>
+        }
+      </div>
+    </div>
+
+    <!-- Danh Sách Trắng -->
+    <div class="bento-item whitelist-users">
+      <div class="card-header">
+        <h3 class="card-title">🟢 DANH SÁCH TRẮNG</h3>
+        <div class="user-count">{{ whitelistedUsers.length }} người dùng</div>
+      </div>
+      <div class="table-container">
+        @if (whitelistedUsers.length > 0) {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Địa Chỉ</th>
+              <th>Thua Liên Tiếp</th>
+              <th>Trạng Thái</th>
+              <th>Hành Động</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of whitelistedUsers; track trackByAddress($index, user)) {
+            <tr>
+              <td>{{ formatAddress(user.address) }}</td>
+              <td>{{ user.consecutiveLoses }} lần thua</td>
+              <td>
+                <span class="status-badge status-force-win">🟢 Ép Thắng</span>
+              </td>
+              <td>
+                <button class="action-btn secondary" (click)="removeFromWhitelist(user.address)">Xóa</button>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+        } @else {
+        <div class="no-data">Không có người dùng trong danh sách trắng</div>
+        }
+      </div>
+    </div>
+
+    <!-- Smart Contract Management -->
+    <div class="bento-item smart-contract-management">
+      <div class="card-header">
+        <h3 class="card-title">🔗 QUẢN LÝ SMART CONTRACT</h3>
+        <div class="config-badge">Blockchain</div>
+      </div>
+      <div class="smart-contract-section">
+        <div class="contract-actions">
+          <button class="action-btn contract-btn" (click)="openContractManagement()">
+            <span class="btn-icon">🎮</span>
+            <span class="btn-text">Quản Lý Game Server</span>
+          </button>
+          <button class="action-btn contract-btn" (click)="openSystemLogs()">
+            <span class="btn-icon">📝</span>
+            <span class="btn-text">Quản Lý Log</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

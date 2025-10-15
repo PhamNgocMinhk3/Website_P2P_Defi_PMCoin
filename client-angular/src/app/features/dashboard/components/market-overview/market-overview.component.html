@@ -1,0 +1,26 @@
+<div class="market-overview-card dashboard-card">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span class="title-icon">📈</span>
+      Tổng quan thị trường
+    </h2>
+  </div>
+  <div class="card-content">
+    <div class="market-table">
+      <div class="table-header">
+        <span>Tên</span>
+        <span>Giá</span>
+        <span>24h %</span>
+      </div>
+      <div class="table-body">
+        <div *ngFor="let coin of marketData" class="table-row">
+          <span class="coin-name">{{ coin.symbol }}</span>
+          <span>{{ coin.currentPrice | number:'1.2-2' }}</span>
+          <span [ngClass]="coin.priceChangePercent24h >= 0 ? 'text-green-500' : 'text-red-500'">
+            {{ coin.priceChangePercent24h | number:'1.2-2' }}%
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

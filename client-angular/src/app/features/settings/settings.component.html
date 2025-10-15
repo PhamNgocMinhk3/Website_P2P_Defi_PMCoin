@@ -1,0 +1,260 @@
+<div class="settings-container">
+  <!-- Header -->
+  <div class="settings-header">
+    <h1 class="page-title">
+      <span class="title-icon">⚙️</span>
+      Cài Đặt
+    </h1>
+    <p class="page-subtitle">Quản lý tài khoản và tùy chỉnh ứng dụng</p>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <div class="settings-interface">
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+      <button class="tab-button" [class.active]="activeTab === 'profile'" (click)="setActiveTab('profile')">
+        <span class="tab-icon">👤</span>
+        <span class="tab-text">Hồ Sơ</span>
+      </button>
+      <button class="tab-button" [class.active]="activeTab === 'security'" (click)="setActiveTab('security')">
+        <span class="tab-icon">🔒</span>
+        <span class="tab-text">Bảo Mật</span>
+      </button>
+      <button class="tab-button" [class.active]="activeTab === 'notifications'" (click)="setActiveTab('notifications')">
+        <span class="tab-icon">🔔</span>
+        <span class="tab-text">Thông Báo</span>
+      </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Profile Tab -->
+      <div *ngIf="activeTab === 'profile'" class="profile-tab">
+        <div class="profile-section">
+          <h3 class="section-title">Thông Tin Cá Nhân</h3>
+
+          <div class="profile-form">
+            <!-- Avatar Management -->
+            <app-avatar-management [currentAvatar]="userProfile.avatar" (avatarChanged)="onAvatarChanged($event)">
+            </app-avatar-management>
+
+            <!-- Form Fields -->
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" [(ngModel)]="userProfile.email" readonly class="form-input readonly-field">
+                <small class="field-note">Không thể thay đổi</small>
+              </div>
+
+              <div class="form-group">
+                <label>Họ và tên</label>
+                <input type="text" [(ngModel)]="userProfile.fullName" readonly class="form-input readonly-field">
+                <small class="field-note">Không thể thay đổi</small>
+              </div>
+
+              <div class="form-group">
+                <label>Số điện thoại</label>
+                <input type="tel" [(ngModel)]="userProfile.phone" [readonly]="!isEditingProfile" class="form-input">
+              </div>
+
+              <div class="form-group">
+                <label>Mã Ví điện tử</label>
+                <textarea [(ngModel)]="userProfile.walletCode" [readonly]="!isEditingProfile" class="form-textarea"
+                  rows="3"></textarea>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-actions">
+              <button *ngIf="!isEditingProfile" class="btn-primary" (click)="toggleEditProfile()">
+                Chỉnh Sửa
+              </button>
+
+              <div *ngIf="isEditingProfile" class="edit-actions">
+                <button class="btn-secondary" (click)="cancelEditProfile()">
+                  Hủy
+                </button>
+                <button class="btn-primary" [disabled]="!isProfileFormValid() || isSaving" (click)="saveProfile()">
+                  {{ isSaving ? 'Đang lưu...' : 'Lưu' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Tab -->
+      <div *ngIf="activeTab === 'security'" class="security-tab">
+        <!-- Two-Factor Authentication -->
+        <div class="security-section">
+          <h3 class="section-title">Xác Thực Hai Yếu Tố (2FA)</h3>
+
+          <div class="security-item">
+            <div class="security-info">
+              <div class="security-label">Bảo mật nâng cao</div>
+              <div class="security-description">Thêm lớp bảo mật cho tài khoản của bạn</div>
+            </div>
+            <div class="security-control">
+              <label class="toggle-switch">
+                <input type="checkbox" [ngModel]="userSettings?.twoFactorEnabled"
+                  (change)="toggleSetting('twoFactorEnabled')">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Password Change -->
+        <div class="security-section">
+          <h3 class="section-title">Đổi Mật Khẩu</h3>
+
+          <div class="password-form">
+            <div class="form-group">
+              <label>Mật khẩu hiện tại</label>
+              <input type="password" [(ngModel)]="passwordForm.currentPassword" class="form-input"
+                placeholder="Nhập mật khẩu hiện tại">
+            </div>
+
+            <div class="form-group">
+              <label>Mật khẩu mới</label>
+              <input type="password" [(ngModel)]="passwordForm.newPassword" class="form-input"
+                placeholder="Nhập mật khẩu mới">
+            </div>
+
+            <div class="form-group">
+              <label>Xác nhận mật khẩu mới</label>
+              <input type="password" [(ngModel)]="passwordForm.confirmPassword" class="form-input"
+                placeholder="Nhập lại mật khẩu mới">
+            </div>
+
+            <div class="password-actions">
+              <button class="btn-primary password-change-btn" [disabled]="!isPasswordFormValid() || isChangingPassword"
+                [class.loading]="isChangingPassword" (click)="changePassword()">
+                <span *ngIf="!isChangingPassword" class="btn-icon">🔐</span>
+                <span *ngIf="isChangingPassword" class="btn-spinner">
+                  <div class="spinner"></div>
+                </span>
+                <span class="btn-text">{{ isChangingPassword ? 'Đang thay đổi...' : 'Đổi Mật Khẩu' }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Login Alerts -->
+        <div class="security-section">
+          <h3 class="section-title">Cảnh Báo Đăng Nhập</h3>
+
+          <div class="security-item">
+            <div class="security-info">
+              <div class="security-label">Thông báo đăng nhập</div>
+              <div class="security-description">Nhận thông báo khi có đăng nhập mới</div>
+            </div>
+            <div class="security-control">
+              <label class="toggle-switch">
+                <input type="checkbox" [ngModel]="userSettings?.loginNotificationEnabled"
+                  (change)="toggleSetting('loginNotificationEnabled')">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications Tab -->
+      <div *ngIf="activeTab === 'notifications'" class="notifications-tab">
+        <!-- Email Notifications -->
+        <div class="notification-section">
+          <h3 class="section-title">Thông Báo Email</h3>
+
+          <div class="notification-item">
+            <div class="notification-info">
+              <div class="notification-label">Email thông báo</div>
+              <div class="notification-description">Thông báo về các giao dịch và hoạt động</div>
+            </div>
+            <div class="notification-control">
+              <label class="toggle-switch">
+                <input type="checkbox" [ngModel]="userSettings?.emailNotificationEnabled"
+                  (change)="toggleSetting('emailNotificationEnabled')">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="notification-item">
+            <div class="notification-info">
+              <div class="notification-label">Push thông báo</div>
+              <div class="notification-description">Thông báo đẩy trên thiết bị</div>
+            </div>
+            <div class="notification-control">
+              <label class="toggle-switch">
+                <input type="checkbox" [ngModel]="userSettings?.pushNotificationEnabled"
+                  (change)="toggleSetting('pushNotificationEnabled')">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- SMS thông báo đã xóa vì không có tiền thuê dịch vụ SMS -->
+        </div>
+
+        <!-- Privacy Settings -->
+        <div class="notification-section">
+          <h3 class="section-title">Cài Đặt Riêng Tư</h3>
+
+          <!-- Profile công khai đã xóa vì không có trang profile -->
+
+          <div class="notification-item">
+            <div class="notification-info">
+              <div class="notification-label">Hiển thị trạng thái online</div>
+              <div class="notification-description">Cho phép người khác thấy bạn đang online</div>
+            </div>
+            <div class="notification-control">
+              <label class="toggle-switch">
+                <input type="checkbox" [ngModel]="userSettings?.showOnlineStatus"
+                  (change)="toggleSetting('showOnlineStatus')">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          
+
+          
+        </div>
+      </div>
+    </div>
+
+    <!-- Advanced Actions -->
+    <div class="advanced-section">
+      <h3 class="section-title">Tùy Chọn Nâng Cao</h3>
+
+      <div class="advanced-actions">
+        <button class="btn-secondary" (click)="exportSettings()">
+          <span class="btn-icon">📤</span>
+          Xuất Cài Đặt
+        </button>
+
+        <label class="btn-secondary file-input-label">
+          <span class="btn-icon">📥</span>
+          Nhập Cài Đặt
+          <input type="file" accept=".json" (change)="onFileChange($event)" hidden>
+        </label>
+
+        <button class="btn-warning" (click)="resetToDefaults()">
+          <span class="btn-icon">🔄</span>
+          Khôi Phục Mặc Định
+        </button>
+
+        <!-- Profile data is now protected - no need for fix button -->
+        <!-- Xóa tài khoản button đã bị ẩn vì quá rủi ro -->
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,35 @@
+<div class="chat-area-container">
+    <div class="messages-list">
+        <div *ngFor="let message of messages" class="message-item" [ngClass]="{'my-message': message.senderId === currentUserId}">
+            <div class="message-content">
+                <div class="sender-name">{{ message.senderName }}</div>
+                <div class="text">{{ message.content }}</div>
+                <div *ngIf="message.attachments" class="message-attachments">
+                    <!-- Render attachments based on type -->
+                    <img *ngIf="message.type === 'image'" [src]="message.attachments" alt="Attachment" class="chat-image">
+                    <!-- Add more rendering for video, audio, files -->
+                </div>
+                <div class="timestamp">{{ message.createdAt | date:'shortTime' }}</div>
+                <div *ngIf="message.reactions && message.reactions.length > 0" class="message-reactions">
+                    <span *ngFor="let reaction of message.reactions" class="reaction-emoji">{{ reaction.reaction }}</span>
+                </div>
+            </div>
+            <div class="message-actions">
+                <button (click)="recallMessage(message.id)" *ngIf="message.senderId === currentUserId">Recall</button>
+                <button (click)="addReaction(message.id, '👍')">👍</button>
+                <button (click)="addReaction(message.id, '❤️')">❤️</button>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="typingUsers.length > 0" class="typing-indicator">
+        {{ typingUsers.join(', ') }} is typing...
+    </div>
+
+    <div class="message-input-area">
+        <input type="file" (change)="onFileSelected($event)" style="display: none;" #fileInput>
+        <button (click)="fileInput.click()">📎</button>
+        <input type="text" [(ngModel)]="newMessageContent" (keyup.enter)="sendMessage()" (input)="onTyping()" placeholder="Type a message...">
+        <button (click)="sendMessage()">Send</button>
+    </div>
+</div>

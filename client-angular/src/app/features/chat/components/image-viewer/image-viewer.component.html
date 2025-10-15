@@ -1,0 +1,88 @@
+<div *ngIf="isVisible" class="image-viewer-overlay" (click)="closeViewer()">
+  <div class="image-viewer-container" (click)="$event.stopPropagation()">
+    
+    <!-- Header with counter and close button -->
+    <div class="image-viewer-header">
+      <div class="image-counter">{{ imageCounter }}</div>
+      <button class="close-button" (click)="closeViewer()" aria-label="Close">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Main image container -->
+    <div class="image-container">
+      <!-- Navigation arrows -->
+      <button 
+        *ngIf="canGoPrevious" 
+        class="nav-button nav-previous" 
+        (click)="previousImage()"
+        aria-label="Previous image">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+
+      <button 
+        *ngIf="canGoNext" 
+        class="nav-button nav-next" 
+        (click)="nextImage()"
+        aria-label="Next image">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+
+      <!-- Image -->
+      <div class="image-wrapper">
+        <img 
+          [src]="currentImage" 
+          [alt]="'Image ' + (currentIndex + 1)"
+          [style.transform]="imageTransform"
+          (mousedown)="onMouseDown($event)"
+          (touchstart)="onTouchStart($event)"
+          (touchmove)="onTouchMove($event)"
+          class="viewer-image"
+          draggable="false">
+      </div>
+    </div>
+
+    <!-- Bottom controls -->
+    <div class="image-viewer-controls">
+      <!-- Zoom controls -->
+      <div class="zoom-controls">
+        <button 
+          class="control-button" 
+          (click)="zoomOut()" 
+          [disabled]="zoomLevel <= minZoom"
+          aria-label="Zoom out">
+          <i class="fas fa-minus"></i>
+        </button>
+        
+        <span class="zoom-level">{{ (zoomLevel * 100).toFixed(0) }}%</span>
+        
+        <button 
+          class="control-button" 
+          (click)="zoomIn()" 
+          [disabled]="zoomLevel >= maxZoom"
+          aria-label="Zoom in">
+          <i class="fas fa-plus"></i>
+        </button>
+        
+        <button 
+          class="control-button" 
+          (click)="resetZoom()"
+          aria-label="Reset zoom">
+          <i class="fas fa-expand-arrows-alt"></i>
+        </button>
+      </div>
+
+      <!-- Image thumbnails for multiple images -->
+      <div *ngIf="images.length > 1" class="thumbnail-strip">
+        <div 
+          *ngFor="let image of images; let i = index"
+          class="thumbnail"
+          [class.active]="i === currentIndex"
+          (click)="currentIndex = i; indexChange.emit(i); resetZoom()">
+          <img [src]="image" [alt]="'Thumbnail ' + (i + 1)">
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

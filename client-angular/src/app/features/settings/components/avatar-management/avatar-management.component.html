@@ -1,0 +1,41 @@
+<div class="avatar-management">
+  <div class="avatar-preview">
+    <div class="avatar-circle">
+      <img [src]="displayAvatar" alt="Avatar" class="avatar-image" />
+      <div class="avatar-overlay" *ngIf="previewUrl">
+        <span class="preview-text">PREVIEW</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="avatar-actions">
+    <input type="file" #fileInput accept="image/*" (change)="onFileSelected($event)" style="display: none;" />
+
+    <button type="button" class="btn-choose" (click)="fileInput.click()" [disabled]="isUploading">
+      <span class="btn-icon">📷</span>
+      Choose Photo
+    </button>
+
+    <div class="action-buttons" *ngIf="hasChanges">
+      <button type="button" class="btn-save" (click)="saveChanges()" [disabled]="isUploading">
+        <span *ngIf="!isUploading">✓</span>
+        <span *ngIf="isUploading" class="spinner"></span>
+        {{ isUploading ? 'Saving...' : 'Save Changes' }}
+      </button>
+
+      <button type="button" class="btn-cancel" (click)="cancelChanges()" [disabled]="isUploading">
+        Cancel
+      </button>
+    </div>
+
+    <button type="button" class="btn-remove" (click)="removeAvatar()" *ngIf="currentAvatar && !hasChanges"
+      [disabled]="isUploading">
+      <span class="btn-icon">🗑️</span>
+      Remove Avatar
+    </button>
+  </div>
+
+  <div class="upload-info">
+    <p>Supported: JPG, PNG, WebP • Max size: 5MB</p>
+  </div>
+</div>
