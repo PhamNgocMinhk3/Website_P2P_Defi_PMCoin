@@ -16,7 +16,7 @@ namespace TradeFinanceBackend.Controllers
 
     [ApiController]
     [Route("api/p2p")] // Keep same route for frontend compatibility
-    public class PricingController : ControllerBase
+    public class PricingController : BaseApiController // Kế thừa từ BaseApiController để có helper lấy UserId
     {
         private readonly IPriceCalculatorService _priceCalculatorService;
         private readonly IPMCoinPriceService _pmCoinPriceService;
@@ -329,18 +329,21 @@ namespace TradeFinanceBackend.Controllers
         [HttpGet("transactions/history")]
         public async Task<IActionResult> GetTransactionHistory(
             [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 50,
-            [FromQuery] string? walletAddress = null)
+            [FromQuery] int pageSize = 50)
         {
             try
             {
+                // Lấy ID của người dùng đang đăng nhập một cách an toàn từ session/token
+                if (!TryGetCurrentUserId(out var userId))
+                {
+                    return Unauthorized(new ApiResponseDto<object> { Success = false, Message = "User not authenticated." });
+                }
+
                 var query = _context.TransactionHistories.AsQueryable();
 
-                // Filter by wallet address if provided
-                if (!string.IsNullOrEmpty(walletAddress))
-                {
-                    query = query.Where(t => t.SellerAddress == walletAddress || t.BuyerAddress == walletAddress);
-                }
+                // CRITICAL FIX: Always filter by the authenticated user's ID.
+                // This was the source of the data leak.
+                query = query.Where(t => t.UserId == userId);
 
                 // Get total count
                 var totalCount = await query.CountAsync();
