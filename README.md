@@ -334,6 +334,71 @@ Nếu bạn muốn, tôi sẽ:
 - Sinh ví dụ request/response JSON chi tiết cho từng endpoint (create-vnpay-url, request-withdrawal, quicksell rates).
 - Kiểm tra các file config/ENV trong repo và liệt kê chính xác keys cần cập nhật.
 
+### 3.5. P2P — Giao Dịch Token Giữa Người Dùng (Orderbook, Matching, Escrow)
+
+Phần P2P không chỉ bao gồm nạp/rút VNPay và QuickSell — hệ thống còn hỗ trợ giao dịch trực tiếp giữa hai người dùng (user-to-user) theo mô hình orderbook. Mục này mô tả ngắn luồng nghiệp vụ, thành phần liên quan, cơ chế đồng bộ trạng thái (SignalR vs polling), các endpoint phổ biến và những edge-case cần chú ý.
+
+Tổng quan luồng nghiệp vụ
+
+- Người bán tạo order SELL (tokenAddress, amount, price, expiry).
+- Người mua tạo order BUY hoặc chấp nhận order SELL hiện có (taker flow).
+- Backend thực hiện matching (theo price/time hoặc orderbook algorithm), khóa tài sản (escrow) từ người bán và/hoặc giữ VNDT từ người mua cho tới khi settlement.
+- Khi match thành công, backend tạo `Escrow` record và gửi event realtime tới cả hai bên qua SignalR; sau khi xác thực thanh toán/confirmation, tài sản được giải phóng và giao dịch hoàn tất.
+
+Kiến trúc & thành phần liên quan
+
+- Backend: `P2POrderService` / `OrderMatchingService`, `P2PController`, `EscrowService`/`PaymentProcessingService` và (tùy cấu hình) `P2PHub` (SignalR).
+- Frontend: `p2p-orderbook.component.ts`, `p2p.service.ts`, `web3-p2p.service.ts` (approve/transfer on-chain), kết hợp SignalR client để nhận `OrderCreated`/`OrderMatched`/`EscrowReleased`.
+
+Đồng bộ trạng thái: SignalR vs Polling
+
+- SignalR (ưu tiên): gửi event realtime: `OrderCreated`, `OrderUpdated`, `OrderMatched`, `EscrowReleased`, `EscrowRefunded`.
+- Polling (dự phòng): client có thể gọi `GET /api/p2p/orders/updates?since={ts}` hoặc `GET /api/p2p/escrow/{id}/status` để đồng bộ sau khi reconnect.
+
+API endpoints mẫu
+
+- POST `/api/p2p/orders` — tạo order
+  - Body ví dụ:
+    {
+      "type": "SELL",
+      "tokenAddress": "0x...",
+      "amount": "1000000000000000000",
+      "price": 500000,
+      "expiryUtc": "2025-11-02T12:00:00Z"
+    }
+- GET `/api/p2p/orders` — lấy orderbook (filter theo token/type/page)
+- POST `/api/p2p/orders/{id}/cancel` — hủy order (owner hoặc admin)
+- POST `/api/p2p/orders/{id}/match` — match/take order (buyer gửi thông tin thanh toán hoặc txHash)
+- GET `/api/p2p/escrow/{escrowId}/status` — trạng thái escrow: LOCKED → AWAITING_CONFIRMATION → SETTLED → REFUNDED
+
+SignalR events (P2PHub)
+
+- `OrderCreated` { order }
+- `OrderUpdated` { order }
+- `OrderMatched` { orderId, escrowId }
+- `EscrowReleased` { escrowId }
+- `EscrowRefunded` { escrowId }
+
+Edge-cases & vận hành
+
+- Race conditions / double-take: xử lý bằng DB transaction + row-level locking hoặc optimistic concurrency để đảm bảo chỉ một match thành công.
+- Partial fills: nếu hỗ trợ, cần lưu trạng thái phần còn lại và lock tương ứng.
+- Timeouts: buyer/seller không hoàn thành trong window (ví dụ 15 phút) → tự động refund/expire.
+- Dispute/manual review: admin có thể mở dispute, xem logs và quyết định release/refund.
+- Bảo mật: validate ownership, rate-limit, KYC/AML cho threshold lớn, log audit cho mọi hành động.
+
+Ví dụ kịch bản ngắn
+
+1) Seller tạo order SELL 100 TOKEN-A giá 500 VNDT/token → backend lock 100 TOKEN-A vào escrow.
+2) Buyer thấy order và gọi `POST /api/p2p/orders/{id}/match`.
+3) Backend row-lock, tạo escrow, gửi `OrderMatched` qua SignalR.
+4) Buyer hoàn tất thanh toán (nội bộ hoặc off-chain proof). Khi xác thực, backend release escrow: token sang buyer, VNDT sang seller; gửi `EscrowReleased`.
+
+Muốn tôi mở rộng thêm không?
+- Tôi có thể chuyển các endpoint mẫu thành bảng chi tiết (request/response + mã lỗi).
+- Tôi có thể quét thực tế các file `Backend/Controllers` và `Backend/Services` + frontend `client-angular` để liệt kê tên hàm và đường dẫn file tương ứng.
+- Tôi có thể sinh schema JSON chi tiết cho SignalR events.
+
 
 ## 4. Tổng Quan Cấu Trúc Cơ Sở Dữ Liệu
 
