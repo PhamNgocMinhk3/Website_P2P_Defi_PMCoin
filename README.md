@@ -238,6 +238,103 @@ Nền tảng được thiết kế để tương tác với blockchain tương t
 - **Backend (Nethereum)**: `SmartContractLogService` sử dụng thư viện Nethereum để lắng nghe các sự kiện được phát ra từ smart contract chỉ định. Khi phát hiện sự kiện, service ghi lại dữ liệu liên quan (hash giao dịch, địa chỉ, số tiền) vào bảng `SmartContractLogs` trong cơ sở dữ liệu.
 - **Frontend (Ethers.js)**: Frontend sử dụng `ethers.js` để yêu cầu người dùng thực hiện hành động thông qua ví trình duyệt (ví dụ: MetaMask), cho phép tương tác với smart contracts từ phía client.
 
+### 3.4. P2P — Nạp/Rút VNPay & Bán Nhanh (QuickSell → VNDT)
+
+Mô tả tổng quan
+
+Phần P2P (peer-to-peer) mới bổ sung hai tính năng chính:
+- Nạp/Rút qua VNPay: người dùng có thể tạo link thanh toán VNPay (nạp VNDT) và gửi yêu cầu rút tiền về tài khoản ngân hàng/VDP thông qua backend.
+- Bán Nhanh (QuickSell): người dùng bán token ERC-20 trực tiếp cho hợp đồng thông minh QuickSell để nhận VNDT (stablecoin nội bộ) hoặc VND quy đổi. Hành động này được thực hiện thông qua ví người dùng (MetaMask/WalletConnect) và smart contract.
+
+Kiến trúc và luồng hoạt động
+
+- Nạp VNPay (Frontend → Backend → VNPay → IPN → Backend):
+  1. Frontend gọi `POST /api/payment/create-vnpay-url` (yêu cầu có xác thực) với số tiền cần nạp.
+  2. Backend (`PaymentController`/`VnpayService`) tạo một record giao dịch nội bộ, xây dựng URL VNPay và trả về `paymentUrl` cho frontend.
+  3. Người dùng được chuyển tới VNPay để hoàn tất thanh toán.
+  4. VNPay gửi IPN (instant payment notification) về endpoint backend (xử lý trong `PaymentController`) — backend kiểm tra chữ ký, trạng thái và số tiền, cập nhật trạng thái giao dịch và ghi có tiền VNDT cho người dùng (qua `PaymentProcessingService`).
+
+- Rút VNPay (withdrawal request):
+  1. Frontend gọi `POST /api/payment/request-withdrawal` (Authenticated) với payload rút bao gồm thông tin tài khoản ngân hàng và transaction hash nếu có (đối với chuyển ngang hệ thống).
+  2. Backend lưu yêu cầu rút, admin hoặc quy trình tự động xử lý (có thể bằng manual review hoặc tích hợp cổng thanh toán ngân hàng) và cập nhật trạng thái.
+
+- QuickSell (Frontend → Smart Contract → Backend/Sync):
+  1. Người dùng mở modal Bán Nhanh trên frontend (`/p2p`), chọn token và số lượng.
+  2. Frontend (`web3-p2p.service.ts`) kiểm tra và (nếu cần) gọi `approve` để cho phép QuickSell contract chi token của người dùng.
+  3. Frontend gọi hàm contract `sellTokenForVNDT(tokenAddress, amountWei, minVNDT)` qua `quickSellContractInstance` (kết nối signer). Transaction ký bởi ví người dùng.
+  4. Hợp đồng thực hiện hoán đổi theo tỷ giá do admin cấu hình (fixed rate or on-chain rate) và gửi VNDT vào ví người dùng (hoặc ghi nhận trong hệ thống tùy triển khai). Frontend chờ transaction confirmation và thông báo kết quả.
+
+API backend liên quan
+
+- `/api/payment/create-vnpay-url` [POST] — tạo URL VNPay để người dùng thanh toán. (Controller: `PaymentController`, Service: `VnpayService`)
+- `/api/payment/request-withdrawal` [POST] — gửi yêu cầu rút tiền (payload: amount, bankName, accountNumber, accountName, transactionHash).
+- `/api/quicksell/rates` [GET] — lấy tỷ giá QuickSell (Controller: `QuickSellController`).
+- `/api/quicksell/*` — các hành động liên quan đến QuickSell (tùy cấu hình backend có thể cung cấp endpoint bổ trợ).
+- `/api/admin/quicksell/*` — endpoint quản trị (deposit VNDT vào contract, trạng thái contract, rút tokens từ contract) (Controller: `QuickSellAdminController`).
+
+Frontend liên quan
+
+- `client-angular/src/app/core/services/payment.service.ts`
+  - `createVnpayUrl(request)` — gọi backend để lấy `paymentUrl`.
+  - `requestWithdrawal(payload)` — gửi yêu cầu rút.
+- `client-angular/src/app/services/web3-p2p.service.ts`
+  - `approveQuickSell(tokenSymbol, amount)` — approve token cho QuickSell contract.
+  - `quickSellToken(tokenSymbol, amount)` — gọi hàm contract `sellTokenForVNDT` và trả về transaction hash.
+- `client-angular/src/app/features/p2p/p2p.component.ts`
+  - UI modal cho QuickSell: kiểm tra số dư, tính toán VNDT nhận được (gọi backend `p2pService.calculateExchange`), hiển thị và gọi `web3P2PService.quickSellToken` khi user xác nhận.
+
+Cấu hình cần thiết (appsettings / environment)
+
+- Backend (`appsettings.*.json`):
+  - `Vnpay:TmnCode`, `Vnpay:HashSecret`, `Vnpay:BaseUrl`, `Vnpay:ReturnUrl` — cấu hình thông tin cổng VNPay.
+  - `Blockchain:CoreChain:QuickSellContractAddress` — địa chỉ hợp đồng QuickSell.
+  - `Blockchain:CoreChain:QuickSellContractAbiPath` / `Erc20AbiPath` — đường dẫn ABI cho hợp đồng QuickSell và ERC-20.
+
+- Frontend (`environment.ts` / `environment.prod.ts`):
+  - `apiUrl` — base URL backend.
+  - `wsUrl` — URL SignalR hubs nếu cần.
+  - Smart contract addresses và ABI paths được cung cấp cho `web3-p2p.service` qua cấu hình build hoặc runtime.
+
+Quy tắc bảo mật và kiểm tra
+
+- VNPay IPN: backend kiểm tra chữ ký (`VnpayService.ValidateSignature`) và xác thực `vnp_Amount` khớp với record trước khi ghi có.
+- Các thao tác rút tiền cần xác thực người dùng (Authenticated) và có thể yêu cầu review admin.
+- QuickSell contract interaction luôn được ký bởi ví người dùng; backend chỉ ghi nhận lịch sử và cung cấp tỷ giá — không ký giao dịch thay người dùng.
+
+Admin / Quản trị
+
+- Quản trị viên có thể nạp VNDT vào contract qua UI admin (`quicksell-management.component.ts`) gọi `POST /api/admin/quicksell/deposit-vndt`.
+- Quản trị viên có endpoint để kiểm tra trạng thái contract, rút token, và quản lý tỷ giá.
+
+Ví dụ kiểm thử nhanh
+
+- Tạo VNPay URL (curl):
+```bash
+curl -X POST "http://localhost:5000/api/payment/create-vnpay-url" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{"amount":100000}'
+```
+
+- Gọi API lấy tỷ giá QuickSell:
+```bash
+curl "http://localhost:5000/api/quicksell/rates"
+```
+
+- Thực hiện QuickSell từ frontend: dùng UI P2P → mở modal Bán Nhanh → xác nhận giao dịch trong ví MetaMask.
+
+Ghi chú vận hành
+
+- Kiểm tra kỹ các giá trị cấu hình (Vnpay HashSecret, TmnCode).
+- Đảm bảo ABI và địa chỉ QuickSell hợp lệ và node RPC (provider) sẵn sàng trong `web3-p2p.service`.
+- Theo dõi logs cho IPN VNPay và QuickSell transaction failures (Application Insights / NLog).
+
+Nếu bạn muốn, tôi sẽ:
+- Thêm bảng endpoints chi tiết cho phần P2P trong README (mô tả request/response cụ thể).
+- Sinh ví dụ request/response JSON chi tiết cho từng endpoint (create-vnpay-url, request-withdrawal, quicksell rates).
+- Kiểm tra các file config/ENV trong repo và liệt kê chính xác keys cần cập nhật.
+
+
 ## 4. Tổng Quan Cấu Trúc Cơ Sở Dữ Liệu
 
 Schema cơ sở dữ liệu PostgreSQL được định nghĩa bởi EF Core và bao gồm các bảng chính sau:
