@@ -1,4 +1,4 @@
-# Nền Tảng DATK: Hệ Thống Giao Dịch & Truyền Thông Thời Gian Thực
+# Nền Tảng DATK: Hệ Thống Giao Dịch & Trò Chuyện Thời Gian Thực
 
 ## 1. Tổng Quan
 
