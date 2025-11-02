@@ -1,0 +1,12 @@
+<div class="call-screen">
+  <div class="videos">
+    <video #remoteVideo *ngIf="callType === 'video'" class="remote-video" autoplay playsinline></video>
+    <video #localVideo *ngIf="callType === 'video'" class="local-video" autoplay playsinline></video>
+    <div *ngIf="callType === 'audio'" class="audio-only">
+      <div class="speaker">🔊 Cuộc gọi âm thanh</div>
+    </div>
+  </div>
+  <div class="call-controls">
+    <button (click)="onEndClick()" class="end-call">Kết thúc</button>
+  </div>
+</div>

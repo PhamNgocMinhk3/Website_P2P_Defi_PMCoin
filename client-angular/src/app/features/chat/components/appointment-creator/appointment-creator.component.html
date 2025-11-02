@@ -1,0 +1,117 @@
+<div *ngIf="isVisible" class="modal-overlay" (click)="onClose()">
+  <div class="appointment-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>📅 Tạo lịch hẹn</h3>
+      <button class="close-btn" (click)="onClose()">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-content">
+      <!-- Title Input -->
+      <div class="form-group">
+        <label for="appointmentTitle">
+          Tiêu đề <span class="required">*</span>
+        </label>
+        <input id="appointmentTitle" type="text" [(ngModel)]="title" placeholder="Nhập tiêu đề lịch hẹn..."
+          class="form-input" [class.error]="titleError" maxlength="100" />
+        <div class="input-footer">
+          <div class="error-message" *ngIf="titleError">{{ titleError }}</div>
+          <div class="char-count">{{ title.length }}/100</div>
+        </div>
+      </div>
+
+      <!-- Date and Time -->
+      <div class="datetime-group">
+        <div class="form-group">
+          <label for="appointmentDate">
+            Ngày <span class="required">*</span>
+          </label>
+          <input id="appointmentDate" type="date" [(ngModel)]="selectedDate" [min]="getMinDate()" class="form-input"
+            [class.error]="dateError" />
+          <div class="error-message" *ngIf="dateError">{{ dateError }}</div>
+        </div>
+
+        <div class="form-group">
+          <label for="appointmentTime">
+            Giờ <span class="required">*</span>
+          </label>
+          <input id="appointmentTime" type="time" [(ngModel)]="selectedTime" [min]="getMinTime()" class="form-input"
+            [class.error]="timeError" />
+          <div class="error-message" *ngIf="timeError">{{ timeError }}</div>
+        </div>
+      </div>
+
+      <!-- DateTime Preview -->
+      <div class="datetime-preview" *ngIf="selectedDate && selectedTime">
+        <div class="preview-label">Lịch hẹn vào:</div>
+        <div class="preview-datetime">{{ formatDateTime() }}</div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label for="appointmentDescription">
+          Mô tả <span class="optional">(tùy chọn)</span>
+        </label>
+        <textarea id="appointmentDescription" [(ngModel)]="description" placeholder="Thêm chi tiết về lịch hẹn..."
+          class="form-textarea" rows="3" maxlength="500"></textarea>
+        <div class="char-count">{{ description.length }}/500</div>
+      </div>
+
+      <!-- Participants -->
+      <div class="participants-section" *ngIf="participants.length > 0">
+        <h4>Người tham gia ({{ participants.length + 1 }})</h4>
+        <div class="participants-list">
+          <!-- Current user -->
+          <div class="participant">
+            <img [src]="currentUser.avatar" [alt]="currentUser.name" class="participant-avatar" />
+            <div class="participant-info">
+              <div class="participant-name">{{ currentUser.name }} (You)</div>
+              <div class="participant-role">Organizer</div>
+            </div>
+          </div>
+
+          <!-- Other participants -->
+          <div *ngFor="let participant of participants" class="participant">
+            <img [src]="participant.avatar" [alt]="participant.name" class="participant-avatar" />
+            <div class="participant-info">
+              <div class="participant-name">{{ participant.name }}</div>
+              <div class="participant-status" [class.active]="participant.active">
+                {{ participant.active ? 'Online' : 'Offline' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="onClose()">
+        Hủy
+      </button>
+      <button class="btn btn-primary" [disabled]="!canCreateAppointment()" (click)="createAppointment()">
+        <i class="fa-solid fa-calendar-plus"></i>
+        Tạo lịch hẹn
+      </button>
+    </div>
+
+    <!-- Form Requirements -->
+    <div class="requirements-info" *ngIf="!canCreateAppointment()">
+      <div class="requirement" [class.met]="title.trim().length > 0">
+        <i class="fa-solid fa-check" *ngIf="title.trim().length > 0"></i>
+        <i class="fa-solid fa-times" *ngIf="title.trim().length === 0"></i>
+        Tiêu đề là bắt buộc
+      </div>
+      <div class="requirement" [class.met]="selectedDate.length > 0">
+        <i class="fa-solid fa-check" *ngIf="selectedDate.length > 0"></i>
+        <i class="fa-solid fa-times" *ngIf="selectedDate.length === 0"></i>
+        Ngày là bắt buộc
+      </div>
+      <div class="requirement" [class.met]="selectedTime.length > 0">
+        <i class="fa-solid fa-check" *ngIf="selectedTime.length > 0"></i>
+        <i class="fa-solid fa-times" *ngIf="selectedTime.length === 0"></i>
+        Giờ là bắt buộc
+      </div>
+    </div>
+  </div>
+</div>

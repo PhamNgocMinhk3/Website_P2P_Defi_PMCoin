@@ -1,0 +1,244 @@
+<div class="message-container" [id]="'message-' + message.id" [ngClass]="{
+    'message-outgoing': message.isOutgoing,
+    'message-incoming': !message.isOutgoing,
+    'is-group-chat': (selectedUser$ | async)?.isGroup,
+    'is-grouped': !showSenderInfo && !message.isOutgoing,
+    'is-poll': message.type === 'poll',
+    'unread': !message.isRead && !message.isOutgoing,
+    'pinned': message.isPinned
+}">
+    <!-- Avatar for incoming messages -->
+    <div class="avatar-container" *ngIf="!message.isOutgoing && showSenderInfo">
+        <img
+            [src]="message.senderAvatar || 'https://st3.depositphotos.com/6672868/13701/v/450/depositphotos_137014128-stock-illustration-user-profile-icon.jpg'"
+            alt="Sender Avatar" class="sender-avatar">
+    </div>
+
+    <div class="message-main-content">
+        <!-- Sender Name (only for incoming group messages that are the start of a block) -->
+        <div *ngIf="showSenderInfo" class="sender-info">
+            <div class="sender-name">
+                {{ message.senderUsername }}
+            </div>
+        </div>
+
+        <!-- Message Bubble and Reactions -->
+        <div class="message-bubble-wrapper">
+            <div class="relative flex flex-col items-stretch" [ngClass]="{'w-full': message.type === 'poll'}">
+                <div [ngClass]="{
+                'message-bubble': message.type !== 'poll',
+                'poll-bubble': message.type === 'poll',
+                'outgoing': message.isOutgoing,
+                'incoming': !message.isOutgoing,
+                'p-0 overflow-hidden': message.type === 'image' || message.type === 'gif',
+                'p-3': message.type !== 'image' && message.type !== 'gif' && message.type !== 'poll'
+            }" (click)="onMessageClick()">
+                <ng-container [ngSwitch]="message.type" >
+                    <ng-container *ngSwitchCase="'text'">
+                        <p *ngIf="message.type === 'text'" class="text-sm break-words">{{ message.text }}</p>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'image'" >
+                        <div *ngIf="message.type === 'image' && message.imageUrls" class="image-grid"
+                            [class.single]="message.imageUrls.length === 1">
+                            <!-- Thêm (click) event -->
+                            <img *ngFor="let imageUrl of message.imageUrls; let i = index" [src]="imageUrl"
+                                (click)="onImageClick(i)" alt="Sent image" class="cursor-pointer" />
+                        </div>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'file'" >
+                        <div *ngIf="message.type === 'file' && message.fileInfo"
+                            class="flex items-center gap-3 cursor-pointer hover:bg-black hover:bg-opacity-5 rounded-lg p-2 transition-colors"
+                            (click)="onFileClick()">
+                            <i class="fa-solid fa-file text-2xl"></i>
+                            <div class="text-sm flex-1">
+                                <p class="font-medium break-all">{{ message.fileInfo.name }}</p>
+                                <p class="text-xs opacity-80">{{ message.fileInfo.size }}</p>
+                            </div>
+                            <i class="fa-solid fa-download text-sm opacity-60"></i>
+                        </div>
+                    </ng-container >
+                    <ng-container *ngSwitchCase="'audio'">
+                        <div *ngIf="message.type === 'audio' && message.audioUrl"
+                            class="flex items-center gap-2 w-64">
+                            <audio [src]="message.audioUrl" controls class="w-full"></audio>
+                        </div> 
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'poll'">
+                        <div *ngIf="message.type === 'poll' && message.pollData" >
+                            <p class="font-bold mb-3 text-center">{{ message.pollData.question }}</p>
+                            <div class="flex flex-col gap-2">
+                                <button *ngFor="let option of message.pollData.options; let optIndex = index" (click)="onVote(optIndex)"
+                                    class="poll-option" [class.voted]="isVotedByCurrentUser(option)">
+                                    <div class="flex justify-between items-center w-full">
+                                        <span>{{ option.text }}</span><span class="font-semibold">{{ option.votes
+                                            }}</span>
+                                    </div>
+                                    <div class="poll-bar" [style.width.%]="getPollPercentage(option, message.pollData)">
+                                    </div>
+                                </button>
+                            </div>
+
+                            <!-- Add Poll Option Button -->
+                            <div class="poll-actions">
+                                <button class="add-poll-option-btn" (click)="onAddPollOption(message.id)">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Thêm lựa chọn</span>
+                                </button>
+                            </div>
+                        </div>
+                    </ng-container >
+                    <ng-container *ngSwitchCase="'gif'">
+                        <img *ngIf="message.type === 'gif' && message.gifUrl" [src]="message.gifUrl" alt="Selected GIF"
+                            class="max-w-xs rounded-lg block" />
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'appointment'">
+                        <!-- FIX: Add custom styling for better readability -->
+                        <div *ngIf="message.type === 'appointment' && message.appointmentData" 
+                             class="appointment-card"
+                             [ngClass]="{'appointment-card-outgoing': message.isOutgoing, 'appointment-card-incoming': !message.isOutgoing}">
+                            <div class="appointment-header">
+                                <div class="appointment-icon">📅</div>
+                                <div class="appointment-title">{{ message.appointmentData.title }}</div>
+                            </div>
+                            <div class="appointment-datetime">
+                                <i class="fa-solid fa-clock"></i>
+                                {{ formatAppointmentDateTime(message.appointmentData.dateTime) }}
+                            </div>
+                            <div class="appointment-description" *ngIf="message.appointmentData.description">
+                                {{ message.appointmentData.description }}
+                            </div>
+                            <div class="appointment-participants">
+                                <div class="participants-label">
+                                    <i class="fa-solid fa-users"></i>
+                                {{ message.appointmentData.participants.length + 1 }} participants
+                                </div>
+                                <div class="participants-avatars">
+                                    <img [src]="message.appointmentData.createdBy.avatar || 'https://ui-avatars.com/api/?name=' + (message.appointmentData.createdBy.firstName || '').charAt(0)"
+                                        [alt]="message.appointmentData.createdBy.firstName + ' ' + message.appointmentData.createdBy.lastName"
+                                        class="participant-avatar organizer"
+                                        [title]="message.appointmentData.createdBy.firstName + ' ' + message.appointmentData.createdBy.lastName + ' (Organizer)'" />
+                                    <img *ngFor="let participant of message.appointmentData.participants.slice(0, 3)"
+                                        [src]="participant.avatar || 'https://ui-avatars.com/api/?name=' + (participant.firstName || '').charAt(0)" [alt]="participant.firstName + ' ' + participant.lastName" class="participant-avatar"
+                                        [title]="participant.firstName + ' ' + participant.lastName" />
+                                    <div *ngIf="message.appointmentData.participants.length > 3"
+                                        class="participant-avatar more"
+                                        [title]="'And ' + (message.appointmentData.participants.length - 3) + ' more'">
+                                        +{{ message.appointmentData.participants.length - 3 }}
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Appointment Actions Logic -->
+                            <div class="appointment-actions" *ngIf="currentUser">
+                                <!-- Creator sees only a 'Cancel' button, which deletes the message -->
+                                <button *ngIf="isAppointmentCreator()" class="appointment-btn decline" (click)="onDeleteClick()">
+                                    <i class="fa-solid fa-calendar-times"></i>
+                                    Cancel
+                                </button>
+
+                                <!-- Others see Accept/Decline or Leave -->
+                                <ng-container *ngIf="!isAppointmentCreator() && !hasUserDeclinedAppointment()">
+                                    <!-- If user has NOT accepted yet -->
+                                    <ng-container *ngIf="!hasUserAcceptedAppointment()">
+                                        <button class="appointment-btn accept" (click)="onAcceptAppointment()">
+                                    <i class="fa-solid fa-check"></i>
+                                    Accept
+                                </button>
+                                        <button class="appointment-btn decline" (click)="onDeclineOrLeaveAppointment()">
+                                    <i class="fa-solid fa-times"></i>
+                                    Decline
+                                </button>
+                                    </ng-container>
+                                    <!-- If user HAS accepted -->
+                                    <button *ngIf="hasUserAcceptedAppointment()" class="appointment-btn leave" (click)="onDeclineOrLeaveAppointment()">
+                                        <i class="fa-solid fa-door-open"></i>
+                                        Leave
+                                    </button>
+                                </ng-container>
+                            </div>
+                        </div>
+                    </ng-container>
+                </ng-container>
+                </div>
+                <!-- Reactions Display - Corrected logic -->
+                <div *ngIf="message.reactions && objectKeys(message.reactions).length > 0"
+                    class="reaction-summary-container"
+                    >
+                    <div *ngFor="let reaction of message.reactions | keyvalue: originalOrder" class="reaction-chip">
+                        {{ reaction.key }} {{ reaction.value.length }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div *ngIf="message.type !== 'poll'" class="message-actions">
+        <div class="relative action-button-wrapper">
+            <button (click)="toggleReactionPicker($event)" class="action-button">
+                <i class="fa-regular fa-face-smile"></i>
+            </button>
+            <!-- Reaction Picker Popover -->
+            <div *ngIf="isReactionPickerVisible" class="reaction-picker-popover"
+                [class.picker-outgoing]="message.isOutgoing" [class.picker-incoming]="!message.isOutgoing">
+                <span (click)="onSelectReaction('❤️')" class="reaction-emoji">❤️</span>
+                <span (click)="onSelectReaction('😂')" class="reaction-emoji">😂</span>
+                <span (click)="onSelectReaction('👍')" class="reaction-emoji">👍</span>
+                <span (click)="onSelectReaction('😮')" class="reaction-emoji">😮</span>
+                <span (click)="onSelectReaction('😢')" class="reaction-emoji">😢</span>
+                <span (click)="onSelectReaction('😡')" class="reaction-emoji">😡</span>
+            </div>
+        </div>
+        <div class="relative action-button-wrapper">
+            <button (click)="toggleOptionsMenu($event)" class="action-button"><i
+                    class="fa-solid fa-ellipsis-vertical"></i></button>
+            <!-- Options Menu -->
+            <div *ngIf="isOptionsMenuVisible" class="options-menu"
+                [ngClass]="{'options-menu-left': message.isOutgoing, 'options-menu-right': !message.isOutgoing}">
+                <!-- <button (click)="onForwardClick()" class="menu-option">
+                    <i class="fa-solid fa-share"></i>
+                    Coppy nội dung
+                </button> -->
+                <button (click)="onDeleteClick()" class="menu-option delete">
+                    <i class="fa-solid fa-trash"></i>
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- File Download Modal -->
+<div *ngIf="isFileDownloadModalVisible" class="modal-overlay" (click)="closeFileDownloadModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Tải xuống tệp</h3>
+            <button class="modal-close" (click)="closeFileDownloadModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="file-info" *ngIf="selectedFile">
+                <i class="fas fa-file-alt text-4xl text-blue-500 mb-3"></i>
+                <p class="file-name font-semibold text-lg mb-1">{{ selectedFile.name }}</p>
+                <p class="file-size text-sm text-gray-600 mb-4">{{ selectedFile.size }}</p>
+            </div>
+            <div class="warning-message">
+                <div class="warning-icon">
+                    <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                </div>
+                <div class="warning-text">
+                    <p class="font-medium text-gray-800 mb-2">Cảnh báo bảo mật</p>
+                    <p class="text-sm text-gray-600">Chỉ tải xuống tệp từ những nguồn bạn tin tưởng. Tệp có thể chứa
+                        virus hoặc phần mềm độc hại có thể gây hại cho thiết bị của bạn.</p>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" (click)="closeFileDownloadModal()">Hủy</button>
+                <button class="btn btn-primary" (click)="downloadFile()">
+                    <i class="fas fa-download mr-2"></i>
+                    Tải xuống
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,235 @@
+<div class="game-container">
+  <!-- Professional Trading Interface Layout -->
+  <div class="trading-layout">
+    <!-- Main Content Grid -->
+    <div class="main-grid">
+
+      <!-- Left Sidebar: Market Info -->
+      <div class="left-sidebar">
+        <!-- PM Coin Info -->
+        <div class="market-card" *ngIf="pmCoinData">
+          <div class="card-header">
+            <div class="coin-info">
+              <div class="coin-icon">PM</div>
+              <div class="coin-details">
+                <h3>PM Coin</h3>
+                <span class="symbol">PMC/USD</span>
+              </div>
+            </div>
+            <div class="live-badge">
+              <span class="live-dot"></span>
+              LIVE
+            </div>
+          </div>
+
+          <div class="price-section">
+            <div class="current-price" [class]="getPriceChangeClass()">
+              ${{ formatPrice(pmCoinData.currentPrice) }}
+            </div>
+            <div class="price-change" [class]="getChange24hClass()">
+              <span class="change-icon">{{ pmCoinData.change24h >= 0 ? '↗' : '↘' }}</span>
+              {{ formatPercentage(pmCoinData.change24h) }}
+            </div>
+          </div>
+
+          <!-- Live Market Activity Section -->
+          <div class="activity-section">
+            <div class="activity-header">
+              <h4>📊 Hoạt Động Thị Trường</h4>
+              <div class="activity-status">
+                <div class="activity-dot"></div>
+                LIVE
+              </div>
+            </div>
+
+            <div class="activity-feed">
+              <div *ngFor="let transaction of recentTransactions | slice:0:5; trackBy: trackTransaction"
+                class="activity-item" [class]="transaction.action">
+                <div class="transaction-icon">
+                  {{ transaction.action === 'buy' ? '🟢' : '🔴' }}
+                </div>
+                <div class="transaction-details">
+                  <div class="transaction-wallet">{{ formatWalletAddress(transaction.walletAddress) }}</div>
+                  <div class="transaction-info">
+                    {{ transaction.action === 'buy' ? 'mua' : 'bán' }}
+                    {{ formatAmount(transaction.amount) }} PMC
+                  </div>
+                </div>
+                <div class="transaction-price">
+                  ${{ formatPrice(transaction.price) }}
+                </div>
+              </div>
+
+              <!-- Empty state khi chưa có data -->
+              <div *ngIf="recentTransactions.length === 0" class="activity-empty">
+                <div class="loading-dots">
+                  <span></span><span></span><span></span>
+                </div>
+                <p>Đang tải hoạt động thị trường...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Center: Professional Chart -->
+      <div class="chart-area">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h2>Biểu đồ PM Coin</h2>
+            <div class="chart-controls">
+              <span class="data-points" *ngIf="pmCoinData">
+                {{ pmCoinData.priceHistory.length }} điểm dữ liệu
+              </span>
+            </div>
+          </div>
+
+          <div class="chart-viewport">
+            <!-- TradingView Chart Container -->
+            <div class="chart-container-wrapper">
+              <div #priceChart class="tradingview-chart"></div>
+
+              <!-- Chart Loading -->
+              <div class="chart-loading" *ngIf="!pmCoinData">
+                <div class="loading-animation">
+                  <div class="loading-pulse"></div>
+                  <div class="loading-bars">
+                    <div class="bar" *ngFor="let bar of [1,2,3,4,5,6,7,8]" [style.animation-delay]="bar * 0.1 + 's'">
+                    </div>
+                  </div>
+                </div>
+                <h3>Tải dữ liệu ....</h3>
+                <p>Kết nối với nguồn cấp giá PM Coin</p>
+              </div>
+
+              <!-- Price Info Overlay -->
+              <div class="price-info-overlay" *ngIf="pmCoinData">
+                <div class="current-price-display">
+                  <div class="price-main" [class]="getPriceChangeClass()">
+                    ${{ formatPrice(pmCoinData.currentPrice) }}
+                  </div>
+                  <div class="price-change" [class]="getChange24hClass()">
+                    <span class="change-arrow">{{ pmCoinData.change24h >= 0 ? '↗' : '↘' }}</span>
+                    {{ formatPercentage(pmCoinData.change24h) }}
+                    <span class="change-amount">({{ pmCoinData.change24h >= 0 ? '+' : '' }}${{
+                      formatPrice(pmCoinData.change24h >= 0 ?
+                      (pmCoinData.change24h * pmCoinData.currentPrice / 100) :
+                      -(pmCoinData.change24h * pmCoinData.currentPrice / 100)) }})</span>
+                  </div>
+                </div>
+
+                <!-- Chart Stats -->
+                <div class="chart-stats">
+                  <div class="stat-item">
+                    <span class="stat-label">24h High</span>
+                    <span class="stat-value">${{ formatPrice(pmCoinData.currentPrice * 1.05) }}</span>
+                  </div>
+                  <div class="stat-item">
+                    <span class="stat-label">24h Low</span>
+                    <span class="stat-value">${{ formatPrice(pmCoinData.currentPrice * 0.95) }}</span>
+                  </div>
+                  <div class="stat-item">
+                    <span class="stat-label">Volume</span>
+                    <span class="stat-value">{{ formatNumber(pmCoinData.volume || 0) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Chart Crosshair Info -->
+              <div class="crosshair-info" id="crosshairInfo" style="display: none;">
+                <div class="crosshair-time"></div>
+                <div class="crosshair-price"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Game Interface -->
+      <div class="right-panel">
+        <!-- Betting Interface -->
+        <div class="betting-card">
+
+  <div class="card-header">
+    <h3>🎯 Đặt Lệnh</h3>
+    <div class="countdown-timer">
+      <div class="timer-circle" 
+           [class.warning]="gameState.timeLeft <= 10 && gameState.timeLeft > 0"
+           [class.critical]="gameState.timeLeft <= 5 && gameState.timeLeft > 0"
+           [class.finished]="gameState.timeLeft <= 0">
+        <span #timerValue class="timer-value">{{ gameState.timeLeft <= 0 ? '0' : gameState.timeLeft }}</span>
+      </div>
+      <ng-container *ngIf="uiState === 'BETTING'">
+        <div class="timer-text">Thời gian đặt cược</div>
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="bet-amount-section">
+    <label class="section-label">Mức cược</label>
+    <div class="amount-input-wrapper">
+      <span class="currency-symbol">$</span>
+      <input type="number" [(ngModel)]="betAmount" class="amount-input" placeholder="100.00" min="1" [max]="balance">
+    </div>
+    <div class="quick-amounts">
+      <button class="quick-btn" (click)="setBetAmount(10)" [class.active]="betAmount === 10">$10</button>
+      <button class="quick-btn" (click)="setBetAmount(25)" [class.active]="betAmount === 25">$25</button>
+      <button class="quick-btn" (click)="setBetAmount(50)" [class.active]="betAmount === 50">$50</button>
+      <button class="quick-btn" (click)="setBetAmount(100)" [class.active]="betAmount === 100">$100</button>
+      <button class="quick-btn" (click)="setBetAmount(200)" [class.active]="betAmount === 200">$200</button>
+      <button class="quick-btn" (click)="setBetAmount(500)" [class.active]="betAmount === 500">$500</button>
+      <button class="quick-btn" (click)="setBetAmount(1000)" [class.active]="betAmount === 1000">$1000</button>
+      <button class="quick-btn" (click)="setBetAmount(5000)" [class.active]="betAmount === 5000">$5000</button>
+
+    </div>
+  </div>
+
+  <div class="bet-buttons-section">
+    <button class="bet-btn up-btn" [disabled]="!canPlaceBet()" (click)="placeBet('up')">
+      <div class="btn-content">
+        <span class="btn-icon">📈</span>
+        <span class="btn-text">Up</span>
+      </div>
+    </button>
+    <button class="bet-btn down-btn" [disabled]="!canPlaceBet()" (click)="placeBet('down')">
+      <div class="btn-content">
+        <span class="btn-icon">📉</span>
+        <span class="btn-text">Down</span>
+      </div>
+    </button>
+  </div>
+
+  <!-- Active Bet Info Panel -->
+  <div *ngIf="currentBet" class="active-bet-panel" [class.up]="currentBet.direction === 'up'" [class.down]="currentBet.direction === 'down'">
+    <div class="panel-header">
+      <span class="bet-direction">{{ currentBet.direction === 'up' ? 'UP' : 'DOWN' }}</span>
+      <span class="bet-amount">${{ formatPMAmount(currentBet.amount) }}</span>
+    </div>
+    <div class="panel-body">
+      <div class="bet-info-row">
+        <span class="label">Giá vào lệnh:</span>
+        <span class="value price">${{ formatPrice(currentBet.startPrice) }}</span>
+      </div>
+      <div class="bet-info-row">
+        <span class="label">Giá hiện tại:</span>
+        <span class="value price" [class]="getPriceChangeClass()">${{ formatPrice(pmCoinData?.currentPrice || 0) }}</span>
+      </div>
+      <div class="bet-info-row profit-loss" [class]="getBetChangeClass()">
+        <span class="label">Lời/Lỗ:</span>
+        <span class="value">{{ getBetChangeText() }}</span>
+      </div>
+    </div>
+    <div class="panel-footer">
+      <a [href]="'https://scan.test.btcs.network/tx/' + currentBet.transactionHash" target="_blank" class="tx-link">
+        Xem giao dịch
+        <span class="external-link-icon">↗</span>
+      </a>
+    </div>
+  </div>
+  
+</div>
+
+      </div>
+    </div>
+  </div>

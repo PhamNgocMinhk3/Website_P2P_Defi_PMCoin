@@ -1,0 +1,54 @@
+<div class="wallet-overview-card">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span class="title-icon">💰</span>
+      Tổng quan Ví
+    </h2>
+    <button class="currency-toggle" (click)="onToggleCurrency()">
+      {{ walletData?.currency || 'USD' }}
+    </button>
+  </div>
+  
+  <div class="card-content">
+    <div class="overview-main">
+      <div class="total-value">
+        <span class="value-label">Tổng giá trị tài sản</span>
+        <div class="value-amount">
+          <span class="primary-value">
+            {{ formatCurrency(walletData?.currency === 'USD' ? walletData?.totalValue || 0 : walletData?.totalValueVND || 0, walletData?.currency || 'USD') }}
+          </span>
+          <span class="secondary-value" *ngIf="walletData?.currency === 'USD'">
+            ≈ {{ formatCurrency(walletData?.totalValueVND || 0, 'VND') }}
+          </span>
+        </div>
+      </div>
+
+      <!-- 3D Coin Container -->
+      <div class="coin-3d-container" #coin3dContainer>
+        <div class="coin-placeholder">
+          <span class="coin-icon">⟠</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Token List -->
+    <div class="token-list">
+      <div class="token-item" *ngFor="let token of walletData?.tokens">
+        <div class="token-info">
+          <span class="token-icon">{{ token.icon }}</span>
+          <div class="token-details">
+            <span class="token-symbol">{{ token.symbol }}</span>
+            <span class="token-name">{{ token.name }}</span>
+          </div>
+        </div>
+        <div class="token-balance">
+          <span class="balance-amount">{{ formatNumber(token.balance) }}</span>
+          <span class="balance-value">{{ formatCurrency(token.value) }}</span>
+          <span class="balance-change" [class]="token.change24h >= 0 ? 'positive' : 'negative'">
+            {{ token.change24h >= 0 ? '+' : '' }}{{ token.change24h }}%
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

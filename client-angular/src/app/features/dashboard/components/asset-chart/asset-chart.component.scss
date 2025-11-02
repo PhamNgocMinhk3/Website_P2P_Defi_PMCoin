@@ -1,0 +1,230 @@
+// Color Variables
+$primary-color: #4f46e5;
+$secondary-color: #7c3aed;
+$success-color: #10b981;
+$warning-color: #f59e0b;
+$error-color: #ef4444;
+$info-color: #3b82f6;
+
+// Glass Effect
+$glass-background: rgba(255, 255, 255, 0.05);
+$glass-border: rgba(255, 255, 255, 0.1);
+
+// Text Colors
+$text-primary: #ffffff;
+$text-secondary: #9ca3af;
+$text-muted: #6b7280;
+
+.asset-chart-card {
+  background: $glass-background;
+  backdrop-filter: blur(20px);
+  border-radius: 1.5rem;
+  border: 1px solid $glass-border;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      $primary-color,
+      transparent
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover {
+    transform: translateY(-5px);
+    border-color: $primary-color;
+    box-shadow: 0 20px 40px rgba($primary-color, 0.1);
+
+    &::before {
+      opacity: 1;
+    }
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: $text-primary;
+      margin: 0;
+
+      .title-icon {
+        font-size: 1.5rem;
+      }
+    }
+
+    .chart-controls {
+      display: flex;
+      gap: 0.5rem;
+
+      .chart-period {
+        background: transparent;
+        color: $text-secondary;
+        border: 1px solid $glass-border;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+
+        &:hover,
+        &.active {
+          background: $primary-color;
+          color: white;
+          border-color: $primary-color;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+        }
+      }
+    }
+  }
+
+  .card-content {
+    .chart-container {
+      margin: 1.5rem 0;
+      height: 250px;
+      position: relative;
+      border-radius: 1rem;
+      overflow: hidden;
+      background: rgba($glass-background, 0.3);
+      padding: 1rem;
+
+      canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
+    }
+
+    .chart-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+
+      .stat-item {
+        text-align: center;
+        padding: 1rem;
+        background: rgba($glass-background, 0.5);
+        border-radius: 0.75rem;
+        border: 1px solid rgba($glass-border, 0.5);
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: rgba($primary-color, 0.1);
+          border-color: rgba($primary-color, 0.3);
+          transform: translateY(-2px);
+        }
+
+        .stat-label {
+          display: block;
+          font-size: 0.75rem;
+          color: $text-secondary;
+          margin-bottom: 0.5rem;
+          font-weight: 500;
+        }
+
+        .stat-value {
+          display: block;
+          font-weight: 600;
+          color: $text-primary;
+          font-size: 1rem;
+
+          &.positive {
+            color: $success-color;
+          }
+
+          &.negative {
+            color: $error-color;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Loading animation
+.chart-container {
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    margin: -20px 0 0 -20px;
+    border: 3px solid rgba($primary-color, 0.3);
+    border-top: 3px solid $primary-color;
+    border-radius: 50%;
+    animation: chartLoading 1s linear infinite;
+    z-index: 1;
+    opacity: 0;
+  }
+
+  &.loading::before {
+    opacity: 1;
+  }
+}
+
+@keyframes chartLoading {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .asset-chart-card {
+    .card-header {
+      flex-direction: column;
+      gap: 1rem;
+      align-items: flex-start;
+
+      .chart-controls {
+        align-self: stretch;
+        justify-content: center;
+      }
+    }
+
+    .chart-container {
+      height: 200px;
+      margin: 1rem 0;
+    }
+
+    .chart-stats {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+
+      .stat-item {
+        padding: 0.75rem;
+      }
+    }
+  }
+}
+
+// Chart hover effects
+.chart-container:hover {
+  canvas {
+    filter: brightness(1.05);
+  }
+}

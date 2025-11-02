@@ -1,0 +1,96 @@
+<div *ngIf="isVisible" class="modal-overlay" (click)="onClose()">
+  <div class="group-creation-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>👥 {{ isAddMemberMode ? 'Thêm thành viên' : 'Tạo nhóm chat' }}</h3>
+      <button class="close-btn" (click)="onClose()">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-content">
+      <!-- Group Name Input -->
+      <div class="form-group" *ngIf="!isAddMemberMode">
+        <label for="groupName">Tên nhóm</label>
+        <input id="groupName" type="text" [(ngModel)]="groupName" placeholder="Nhập tên nhóm chat..."
+          class="group-name-input" maxlength="50" />
+        <div class="char-count">{{ groupName.length }}/50</div>
+      </div>
+
+      <!-- Selected Users -->
+      <div class="selected-users" *ngIf="selectedUsers.length > 0">
+        <h4>Thành viên đã chọn ({{ selectedUsers.length }})</h4>
+        <div class="selected-list">
+          <div *ngFor="let user of selectedUsers; trackBy: trackByUserId" class="selected-user">
+            <img [src]="user.avatar" [alt]="user.name" class="user-avatar" />
+            <span class="user-name">{{ user.name }}</span>
+            <button class="remove-btn" (click)="removeSelectedUser(user)" title="Xóa khỏi nhóm">
+              <i class="fa-solid fa-times"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Search -->
+      <div class="form-group">
+        <label for="userSearch">Thêm thành viên</label>
+        <div class="search-box">
+          <i class="fa-solid fa-search search-icon"></i>
+          <input id="userSearch" type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()"
+            placeholder="Tìm kiếm người dùng..." class="search-input" />
+        </div>
+      </div>
+
+      <!-- Available Users -->
+      <div class="users-list">
+        <div *ngFor="let user of filteredUsers; trackBy: trackByUserId" class="user-item"
+          [class.selected]="isUserSelected(user)" (click)="toggleUserSelection(user)">
+          <img [src]="user.avatar" [alt]="user.name" class="user-avatar" />
+          <div class="user-info">
+            <div class="user-name">{{ user.name }}</div>
+            <div class="user-status" [class.active]="user.active">
+              {{ user.active ? 'Đang hoạt động' : 'Ngoại tuyến' }}
+            </div>
+          </div>
+          <div class="selection-indicator">
+            <i class="fa-solid" [class.fa-check]="isUserSelected(user)" [class.fa-plus]="!isUserSelected(user)"></i>
+          </div>
+        </div>
+
+        <div *ngIf="filteredUsers.length === 0" class="empty-state">
+          <div class="empty-icon">👥</div>
+          <p *ngIf="searchTerm">Không tìm thấy người dùng nào với từ khóa "{{ searchTerm }}"</p>
+          <p *ngIf="!searchTerm && selectedUsers.length === availableUsers.length">
+            Tất cả người dùng đã được chọn
+          </p>
+          <p *ngIf="!searchTerm && selectedUsers.length < availableUsers.length">
+            Không có thêm người dùng nào
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="onClose()">
+        Hủy
+      </button>
+      <button class="btn btn-primary" [disabled]="!canCreateGroup()" (click)="confirmAction()">
+        <i class="fa-solid" [class.fa-users]="!isAddMemberMode" [class.fa-user-plus]="isAddMemberMode"></i>
+        {{ isAddMemberMode ? 'Thêm' : 'Tạo nhóm' }}
+      </button>
+    </div>
+
+    <!-- Requirements Info -->
+    <div class="requirements-info" *ngIf="!canCreateGroup()">
+      <div class="requirement" [class.met]="groupName.trim().length > 0">
+        <i class="fa-solid fa-check" *ngIf="groupName.trim().length > 0"></i>
+        <i class="fa-solid fa-times" *ngIf="groupName.trim().length === 0"></i>
+        Cần nhập tên nhóm
+      </div>
+      <div class="requirement" [class.met]="selectedUsers.length >= 2">
+        <i class="fa-solid fa-check" *ngIf="selectedUsers.length >= 2"></i>
+        <i class="fa-solid fa-times" *ngIf="selectedUsers.length < 2"></i>
+        Cần ít nhất 2 thành viên
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,70 @@
+<div class="quicksell-container">
+  <div class="header">
+    <h1>⚡ Quản Lý Kho Bán Nhanh (QuickSell)</h1>
+    <p>Theo dõi số dư và quản lý kho token của contract.</p>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="state.isLoading" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Đang tải dữ liệu từ Smart Contract...</p>
+  </div>
+
+  <div *ngIf="!state.isLoading" class="content-grid">
+    <!-- Balances Section -->
+    <div class="bento-item management-card">
+      <div class="card-header">
+        <h3>🏦 Quản Lý Kho</h3>
+        <button class="refresh-btn" (click)="fetchStatus()" title="Làm mới dữ liệu">🔄</button>
+      </div>
+      <div class="management-grid">
+        <!-- Balances Display -->
+        <div class="balances-display">
+          <h4>Số Dư Hiện Tại</h4>
+          <div class="balances-grid">
+            <div *ngFor="let token of getBalanceKeys()" class="balance-item">
+              <span class="token-symbol">{{ token }}</span>
+              <span class="token-balance">{{ state.balances[token] | number:'1.2-8' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions Section -->
+        <div class="actions-section">
+          <h4>Nạp VNDT</h4>
+          <div class="input-group">
+            <input 
+              type="number" 
+              placeholder="Số lượng VNDT" 
+              [(ngModel)]="state.depositVNDTAmount" 
+              [disabled]="state.isDepositingVNDT"
+              min="0.000001"
+              step="0.000001">
+            <button 
+              class="action-button deposit-button" 
+              (click)="depositVNDT()" 
+              [disabled]="state.isDepositingVNDT || !state.depositVNDTAmount || state.depositVNDTAmount <= 0">
+              <span *ngIf="!state.isDepositingVNDT">Nạp VNDT</span>
+              <span *ngIf="state.isDepositingVNDT" class="spinner-small"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="actions-section">
+          <h4>Rút Token</h4>
+          <div class="withdraw-buttons">
+            <button 
+              *ngFor="let token of getWithdrawalTokenSymbols()" 
+              class="action-button withdraw-button" 
+              (click)="withdrawTokens(token)"
+              [disabled]="state.isWithdrawingTokens.has(token)">
+              <span *ngIf="!state.isWithdrawingTokens.has(token)">Rút {{ token }}</span>
+              <span *ngIf="state.isWithdrawingTokens.has(token)" class="spinner-small"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<app-notification></app-notification>

@@ -1,0 +1,55 @@
+<div class="transactions-card">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span class="title-icon">📋</span>
+      Lịch sử Giao dịch Gần đây
+    </h2>
+    <button class="view-all-link" (click)="onViewAllTransactions()">
+      Xem tất cả
+    </button>
+  </div>
+  
+  <div class="card-content">
+    <div class="transaction-list" *ngIf="transactions && transactions.length > 0; else noTransactions">
+      <div 
+        class="transaction-item" 
+        *ngFor="let tx of transactions; trackBy: trackByTransactionId"
+        (click)="onTransactionClick(tx)">
+        
+        <div class="transaction-icon" [class]="getTransactionClass(tx.type)">
+          {{ getTransactionIcon(tx.type) }}
+        </div>
+        
+        <div class="transaction-details">
+          <div class="transaction-main">
+            <span class="transaction-type">
+              {{ getTransactionTypeText(tx.type) }} {{ tx.symbol }}
+            </span>
+            <span class="transaction-amount">
+              {{ tx.type === 'receive' || tx.type === 'buy' ? '+' : '-' }}{{ formatNumber(tx.amount) }} {{ tx.symbol }}
+            </span>
+          </div>
+          <div class="transaction-meta">
+            <span class="transaction-address">{{ formatAddress(tx.address) }}</span>
+            <span class="transaction-time">{{ tx.timestamp | date:'short' }}</span>
+          </div>
+        </div>
+        
+        <div class="transaction-status">
+          <span class="status-badge" [class]="getStatusClass(tx.status)">
+            {{ getStatusText(tx.status) }}
+          </span>
+          <span class="transaction-value">{{ formatCurrency(tx.value) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noTransactions>
+      <div class="no-transactions">
+        <div class="no-transactions-icon">📭</div>
+        <h3 class="no-transactions-title">Chưa có giao dịch nào</h3>
+        <p class="no-transactions-subtitle">Các giao dịch của bạn sẽ xuất hiện ở đây</p>
+      </div>
+    </ng-template>
+  </div>
+</div>

@@ -1,0 +1,467 @@
+<div class="group-chat-info-container" *ngIf="groupInfo">
+  <!-- Header -->
+  <div class="group-header">
+    <button class="close-btn" (click)="onClose()">
+      <i class="fas fa-times"></i>
+    </button>
+    <div class="group-avatar">
+      <img [src]="groupInfo.avatar" [alt]="groupInfo.name">
+      <div class="member-count-badge">{{ groupInfo.memberCount }}</div>
+    </div>
+
+    <!-- Group Name -->
+    <div class="group-name-section">
+      <div *ngIf="!isEditingGroupName" class="group-name-display">
+        <h2 (click)="startEditingGroupName()">{{ groupInfo.name }}</h2>
+        <i *ngIf="isAdminOrOwner" class="fas fa-edit edit-icon" (click)="startEditingGroupName()"></i>
+      </div>
+      <div *ngIf="isEditingGroupName" class="group-name-edit">
+        <input [(ngModel)]="editedGroupName" (keyup.enter)="saveGroupName()" (keyup.escape)="cancelEditingGroupName()"
+          #nameInput>
+        <div class="edit-actions">
+          <button class="save-btn" (click)="saveGroupName()"><i class="fas fa-check"></i></button>
+          <button class="cancel-btn" (click)="cancelEditingGroupName()"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Group Description -->
+    <div class="group-description-section">
+      <div *ngIf="!isEditingDescription" class="description-display">
+        <p (click)="startEditingDescription()">{{ groupInfo.description || 'Thêm mô tả nhóm...' }}</p>
+        <i *ngIf="isAdminOrOwner" class="fas fa-edit edit-icon" (click)="startEditingDescription()"></i>
+      </div>
+      <div *ngIf="isEditingDescription" class="description-edit">
+        <textarea [(ngModel)]="editedDescription" (keyup.escape)="cancelEditingDescription()"
+          placeholder="Nhập mô tả nhóm..."></textarea>
+        <div class="edit-actions">
+          <button class="save-btn" (click)="saveDescription()"><i class="fas fa-check"></i></button>
+          <button class="cancel-btn" (click)="cancelEditingDescription()"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="group-meta">
+      <span>Tạo ngày {{ groupInfo.createdAt | date:'dd/MM/yyyy' }}</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-container">
+    <div class="tabs">
+      <button class="tab" [class.active]="activeTab === 'members'" (click)="switchTab('members')">
+        <i class="fas fa-users"></i>
+        <span>Thành viên ({{ members.length }})</span>
+      </button>
+      <button class="tab" [class.active]="activeTab === 'settings'" (click)="switchTab('settings')">
+        <i class="fas fa-cog"></i>
+        <span>Cài đặt</span>
+      </button>
+      <button class="tab" [class.active]="activeTab === 'media'" (click)="switchTab('media')">
+        <i class="fas fa-images"></i>
+        <span>Media</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tab Content -->
+  <div class="tab-content" [ngSwitch]="activeTab">
+    <!-- Members Tab -->
+    <div *ngSwitchCase="'members'" class="members-tab">
+      <!-- Member Actions -->
+      <div class="member-actions">
+        <button *ngIf="canInvite" class="action-btn primary" (click)="onAddMembers()">
+          <i class="fas fa-user-plus"></i>
+          <span>Thêm thành viên</span>
+        </button>
+      </div>
+
+      <!-- Member Search -->
+      <div class="member-search">
+        <div class="search-input">
+          <i class="fas fa-search"></i>
+          <input [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()" placeholder="Tìm kiếm thành viên...">
+        </div>
+        <div class="search-filters">
+          <label class="filter-checkbox">
+            <input type="checkbox" [(ngModel)]="showOnlineOnly" (ngModelChange)="applyFilters()">
+            <span>Chỉ hiển thị online</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Members List -->
+      <div class="members-list">
+        <div *ngFor="let member of filteredMembers; trackBy: trackByMemberId" class="member-item">
+          <div class="member-avatar">
+            <img [src]="member.avatar || 'https://ui-avatars.com/api/?name=' + (member.firstName || '').charAt(0) + '&background=random'" [alt]="member.firstName + ' ' + member.lastName" />
+            <div class="online-indicator" [class.online]="member.isOnline && member.showOnlineStatus"></div>
+          </div>
+
+          <div class="member-info">
+            <div class="member-details">
+              <div class="member-name">
+                <span class="name">{{ member.nickname || (member.firstName + ' ' + member.lastName) }}</span>
+                <span *ngIf="member.nickname" class="real-name">({{ member.firstName }} {{ member.lastName }})</span>
+              </div>
+              <div class="member-role">
+                <span class="role-badge" [ngClass]="'role-' + member.role">{{ getRoleDisplayName(member.role) }}</span>
+              </div>
+              <div class="member-status">
+                <span *ngIf="member.isOnline && member.showOnlineStatus" class="online-text">Đang hoạt động</span>
+                <span *ngIf="!member.isOnline && member.lastSeen" class="offline-text">
+                  Hoạt động {{ formatLastSeen(member.lastSeen) }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Member Actions -->
+          <div class="member-actions" *ngIf="member.id !== currentUserId">
+            <button class="action-button" (click)="openMemberActionsModal(member)">
+              <i class="fas fa-ellipsis-v"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div *ngSwitchCase="'settings'" class="settings-tab">
+      <div class="settings-section">
+        <h3>Quyền nhóm</h3>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <span class="setting-title">Phê duyệt thành viên mới</span>
+            <span class="setting-description">Yêu cầu admin phê duyệt khi có người tham gia</span>
+          </div>
+          <label class="toggle-switch" *ngIf="groupInfo.settings">
+            <input type="checkbox" [checked]="groupInfo.settings.requireApproval" (change)="toggleRequireApproval()" [disabled]="!isAdminOrOwner">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-item" (click)="openPendingMembersModal()" *ngIf="isAdminOrOwner && groupInfo.settings?.requireApproval">
+          <div class="setting-info">
+            <span class="setting-title">Danh sách các thành viên cần phê duyệt</span>
+            <span class="setting-description">Admin phê duyệt khi có người tham gia</span>
+          </div>
+          <div class="setting-action">
+            <span class="badge">{{ pendingMembers.length }}</span>
+            <i class="fas fa-chevron-right"></i>
+          </div>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <span class="setting-title">Chỉ admin được gửi tin</span>
+            <span class="setting-description">Chỉ trưởng nhóm và phó nhóm mới có thể gửi tin nhắn</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" *ngIf="groupInfo.settings"
+                   [checked]="groupInfo.settings.onlyAdminsCanSend" (change)="toggleOnlyAdminsCanSend()" [disabled]="!isAdminOrOwner">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <span class="setting-title">Thành viên được mời người</span>
+            <span class="setting-description">Cho phép thành viên thường mời người khác vào nhóm</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" *ngIf="groupInfo.settings"
+                   [checked]="groupInfo.settings.allowMemberInvite" (change)="toggleAllowMemberInvite()" [disabled]="!isAdminOrOwner">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="settings-section danger-zone">
+        <h3>Vùng nguy hiểm</h3>
+        <button class="danger-btn" (click)="openLeaveModal()" *ngIf="!isOwner">
+          <i class="fas fa-sign-out-alt"></i>
+          Rời nhóm
+        </button>
+        <button class="danger-btn" (click)="openDisbandModal()" *ngIf="isOwner">
+          <i class="fas fa-bomb"></i>
+          Giải tán nhóm
+        </button>
+      </div>
+    </div>
+
+    <!-- Media Tab -->
+    <div *ngSwitchCase="'media'" class="media-tab">
+      <div class="media-section">
+        <!-- Shared Images -->
+        <div class="media-subsection">
+          <h4 class="section-title">Ảnh được chia sẻ ({{ sharedImages.length }})</h4>
+          <div class="media-grid" *ngIf="sharedImages.length > 0; else noImages">
+            <div *ngFor="let image of sharedImages; let i = index" class="media-item image-item" (click)="openImageViewer(i)">
+              <img [src]="image.url" [alt]="image.name" >
+              <div class="image-overlay">
+                <i class="fas fa-expand-alt"></i>
+              </div>
+            </div>
+          </div>
+          <ng-template #noImages>
+            <div class="empty-state">
+              <i class="fas fa-image"></i>
+              <p>Chưa có ảnh nào được chia sẻ</p>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- Shared Files -->
+        <div class="media-subsection">
+          <h4 class="section-title">File được chia sẻ ({{ sharedFiles.length }})</h4>
+          <div class="file-list" *ngIf="sharedFiles.length > 0; else noFiles">
+            <div *ngFor="let file of sharedFiles" class="file-item" (click)="openFileDownloadModal(file)">
+              <div class="file-icon" [style.color]="mediaService.getFileTypeColor(file)">
+                <i [class]="mediaService.getFileIcon(file)"></i>
+              </div>
+              <div class="file-info">
+                <div class="file-name">{{ file.name }}</div>
+                <div class="file-size">{{ file.size }}</div>
+              </div>
+              <div class="file-download-icon">
+                <i class="fas fa-download"></i>
+              </div>
+            </div>
+          </div>
+          <ng-template #noFiles>
+            <div class="empty-state">
+              <i class="fas fa-file"></i>
+              <p>Chưa có file nào được chia sẻ</p>
+            </div>
+          </ng-template>
+        </div>
+
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pending Members Modal -->
+<div *ngIf="isPendingMembersModalVisible" class="modal-overlay" (click)="closePendingMembersModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Phê duyệt thành viên</h3>
+      <button class="modal-close" (click)="closePendingMembersModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="pendingMembers.length > 0; else noPending">
+        <div *ngFor="let member of pendingMembers" class="pending-member-item">
+          <div class="member-info">
+            <img [src]="member.avatar || 'https://ui-avatars.com/api/?name=' + (member.firstName || '').charAt(0)" [alt]="member.firstName + ' ' + member.lastName" class="member-avatar">
+            <span>{{ member.firstName }} {{ member.lastName }}</span>
+          </div>
+          <div class="pending-actions">
+            <button class="btn btn-success" (click)="approveMember(member.id)">Phê duyệt</button>
+            <button class="btn btn-danger" (click)="rejectMember(member.id)">Từ chối</button>
+          </div>
+        </div>
+      </div>
+      <ng-template #noPending>
+        <div class="empty-state">
+          <i class="fas fa-check-circle"></i>
+          <p>Không có thành viên nào đang chờ phê duyệt.</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>
+
+<!-- Leave Group Modal -->
+<div *ngIf="isLeaveModalVisible" class="modal-overlay" (click)="closeLeaveModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ isOwner ? 'Chuyển quyền và rời nhóm' : 'Rời nhóm' }}</h3>
+      <button class="modal-close" (click)="closeLeaveModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="warning-icon" *ngIf="!isOwner">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <p *ngIf="!isOwner">Bạn có chắc chắn muốn rời khỏi nhóm này không?</p>
+      <p *ngIf="isOwner">Bạn là trưởng nhóm. Trước khi rời nhóm, bạn cần chuyển quyền trưởng nhóm cho một phó nhóm khác.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeLeaveModal()">Hủy</button>
+      <button class="btn btn-danger" (click)="confirmLeave()" *ngIf="!isOwner">
+        Rời nhóm
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Disband Group Modal -->
+<div *ngIf="isDisbandModalVisible" class="modal-overlay" (click)="closeDisbandModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Giải tán nhóm</h3>
+      <button class="modal-close" (click)="closeDisbandModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="warning-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <p>Bạn có chắc chắn muốn giải tán nhóm <strong>{{ groupInfo?.name }}</strong> không?</p>
+      <p class="warning-text">Hành động này không thể hoàn tác. Nhóm sẽ bị xóa vĩnh viễn.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeDisbandModal()">Hủy</button>
+      <button class="btn btn-danger" (click)="confirmDisband()">Giải tán</button>
+    </div>
+  </div>
+</div>
+
+<!-- Image Viewer -->
+<app-image-viewer [images]="imageViewerImages" [currentIndex]="imageViewerCurrentIndex"
+  [isVisible]="isImageViewerVisible" (close)="closeImageViewer()" (indexChange)="onImageViewerIndexChange($event)">
+</app-image-viewer>
+
+<!-- File Download Modal -->
+<div *ngIf="isFileDownloadModalVisible" class="modal-overlay" (click)="closeFileDownloadModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Tải xuống tệp</h3>
+      <button class="modal-close" (click)="closeFileDownloadModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="file-info-large" *ngIf="selectedFile">
+        <div class="file-icon-large" [style.color]="mediaService.getFileTypeColor(selectedFile!)">
+          <i [class]="mediaService.getFileIcon(selectedFile)"></i>
+        </div>
+        <div class="file-details">
+          <h4>{{ selectedFile.name }}</h4>
+          <p class="file-size">Kích thước: {{ selectedFile.size }}</p>
+          <p class="file-sender" *ngIf="selectedFile.sender">Được gửi bởi: {{ selectedFile.sender }}</p>
+        </div>
+      </div>
+      <div class="warning-section">
+        <div class="warning-icon">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="warning-text">
+          <h5>Cảnh báo bảo mật</h5>
+          <p>Chỉ tải xuống tệp từ những nguồn bạn tin tưởng. Tệp có thể chứa virus hoặc phần mềm độc hại có thể gây hại
+            cho thiết bị của bạn.</p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeFileDownloadModal()">Hủy</button>
+      <button class="btn btn-primary" (click)="downloadFile()">
+        <i class="fas fa-download"></i>
+        Tải xuống
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Kick Member Modal -->
+<div *ngIf="isKickModalVisible" class="modal-overlay" (click)="closeKickModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Kích thành viên</h3>
+      <button class="modal-close" (click)="closeKickModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p>Bạn có chắc chắn muốn kích <strong>{{ selectedMember?.firstName }} {{ selectedMember?.lastName }}</strong> khỏi nhóm không?</p>
+      <p class="warning-text">Thành viên này sẽ không thể tham gia lại nhóm trừ khi được mời lại.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeKickModal()">Hủy</button>
+      <button class="btn btn-danger" (click)="confirmKick()">Kích khỏi nhóm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Transfer Ownership Modal -->
+<div *ngIf="isTransferOwnershipModalVisible" class="modal-overlay" (click)="closeTransferOwnershipModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Chuyển quyền trưởng nhóm</h3>
+      <button class="modal-close" (click)="closeTransferOwnershipModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p>Bạn có chắc chắn muốn chuyển quyền trưởng nhóm cho <strong>{{ selectedMember?.firstName }} {{ selectedMember?.lastName }}</strong> không?</p>
+      <p class="warning-text">Sau khi chuyển, bạn sẽ trở thành phó nhóm và không thể hoàn tác hành động này.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeTransferOwnershipModal()">Hủy</button>
+      <button class="btn btn-danger" (click)="confirmTransferOwnership()">Chuyển quyền</button>
+    </div>
+  </div>
+</div>
+
+<!-- Member Actions Modal -->
+<div *ngIf="isMemberActionsModalVisible" class="modal-overlay" (click)="closeMemberActionsModal()">
+  <div class="member-actions-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Hành động thành viên</h3>
+      <button class="modal-close" (click)="closeMemberActionsModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedMemberForActions">
+      <div class="member-info-header">
+        <img [src]="selectedMemberForActions.avatar || 'https://ui-avatars.com/api/?name=' + (selectedMemberForActions.firstName || '').charAt(0)" [alt]="selectedMemberForActions.firstName + ' ' + selectedMemberForActions.lastName" class="member-avatar">
+        <div class="member-details">
+          <h4>{{ selectedMemberForActions.nickname || (selectedMemberForActions.firstName + ' ' + selectedMemberForActions.lastName) }}</h4>
+          <span class="member-role" [ngClass]="'role-' + selectedMemberForActions.role">
+            {{ getRoleDisplayName(selectedMemberForActions.role) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="action-list">
+        <!-- Set Nickname -->
+        <button class="action-item" (click)="setMemberNickname(selectedMemberForActions)">
+          <i class="fas fa-tag"></i>
+          <span>Đặt biệt danh</span>
+        </button>
+
+        <!-- Role Management (Owner only) -->
+        <div *ngIf="isOwner">
+          <button *ngIf="canPromoteToAdmin(selectedMemberForActions)" class="action-item"
+            (click)="promoteToAdminAction(selectedMemberForActions)">
+            <i class="fas fa-arrow-up"></i>
+            <span>Thăng phó nhóm</span>
+          </button>
+          <button *ngIf="canDemoteFromAdmin(selectedMemberForActions)" class="action-item"
+            (click)="demoteFromAdminAction(selectedMemberForActions)">
+            <i class="fas fa-arrow-down"></i>
+            <span>Hạ thành viên</span>
+          </button>
+          <button *ngIf="canTransferOwnership(selectedMemberForActions)" class="action-item danger"
+            (click)="openTransferOwnershipModal(selectedMemberForActions)">
+            <i class="fas fa-crown"></i>
+            <span>Chuyển quyền trưởng nhóm</span>
+          </button>
+        </div>
+
+        <!-- Kick Member -->
+        <button *ngIf="canKickMember(selectedMemberForActions)" class="action-item danger"
+          (click)="openKickModal(selectedMemberForActions)">
+          <i class="fas fa-user-times"></i>
+          <span>Kích khỏi nhóm</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

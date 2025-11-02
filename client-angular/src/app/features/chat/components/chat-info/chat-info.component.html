@@ -1,0 +1,342 @@
+<div *ngIf="user" class="chat-info-container">
+    <!-- User Profile Section -->
+    <div class="user-profile">
+        <img [src]="user.avatar" alt="User Avatar" class="profile-avatar">
+
+        <!-- Nickname Section -->
+        <div class="nickname-section">
+            <div *ngIf="!isEditingNickname" class="nickname-display">
+                <h2 class="profile-name">{{ currentNickname || user.name }}</h2>
+                <button class="edit-nickname-btn" (click)="startEditingNickname()" title="Edit nickname">
+                    <i class="fas fa-edit"></i>
+                </button>
+            </div>
+
+            <div *ngIf="isEditingNickname" class="nickname-edit">
+                <input [(ngModel)]="newNickname" class="nickname-input" placeholder="Enter nickname"
+                    (keydown.enter)="saveNickname()" (keydown.escape)="cancelEditingNickname()">
+                <div class="nickname-actions">
+                    <button class="save-btn" (click)="saveNickname()">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="cancel-btn" (click)="cancelEditingNickname()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <p class="profile-status" [class.active]="user.isOnline">
+            {{ user.isOnline ? 'Online' : 'Offline' }}
+        </p>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+        <button class="tab-button" [class.active]="activeTab === 'general'" (click)="setActiveTab('general')">
+            <i class="fas fa-info-circle"></i>
+            <span>Thông tin</span>
+        </button>
+        <button class="tab-button" [class.active]="activeTab === 'customize'" (click)="setActiveTab('customize')"
+            [style.color]="activeTab === 'customize' ? (themeService.activeColor$ | async) : ''">
+            <i class="fas fa-palette"></i>
+            <span>Tùy chỉnh</span>
+        </button>
+        <button class="tab-button" [class.active]="activeTab === 'media'" (click)="setActiveTab('media')">
+            <i class="fas fa-photo-film"></i>
+            <span>Phương tiện</span>
+        </button>
+        <button class="tab-button" [class.active]="activeTab === 'options'" (click)="setActiveTab('options')">
+            <i class="fas fa-cog"></i>
+            <span>Tùy chọn</span>
+        </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+
+        <!-- General Info Tab -->
+        <div *ngIf="activeTab === 'general'" class="tab-panel">
+            <div class="info-section">
+                <h4 class="section-title">Thông tin trò chuyện</h4>
+                <div class="info-item">
+                    <span class="info-label">Tên:</span>
+                    <span class="info-value">{{ user.name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Trạng thái:</span>
+                    <span class="info-value" [class.active]="user.isOnline">
+                        {{ user.isOnline ? 'Đang hoạt động' : 'Ngoại tuyến' }}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Lần cuối truy cập:</span>
+                    <span class="info-value">{{ user.time }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customize Tab -->
+        <div *ngIf="activeTab === 'customize'" class="tab-panel">
+            <div class="customize-section">
+                <h4 class="section-title">Màu sắc tùy chỉnh</h4>
+                <div class="color-palette">
+                    <button *ngFor="let color of themeColors" class="color-swatch" [style.backgroundColor]="color"
+                        [class.active]="(themeService.activeColor$ | async) === color" (click)="changeThemeColor(color)"
+                        [title]="color">
+                    </button>
+                </div>
+            </div>
+
+            <div class="background-section">
+                <h4 class="section-title">Thay đổi hình nền</h4>
+                <div class="background-grid">
+                    <div *ngFor="let bg of backgroundOptions" class="background-option"
+                        [class.active]="(themeService.activeBackground$ | async)?.id === bg.id"
+                        (click)="changeBackground(bg)">
+                        <img [src]="bg.thumbnail" [alt]="bg.name">
+                        <span class="background-name">{{ bg.name }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Media Tab -->
+        <div *ngIf="activeTab === 'media'" class="tab-panel">
+            <div class="media-section">
+                <!-- Shared Images -->
+                <div class="media-subsection">
+                    <h4 class="section-title">Shared Images</h4>
+                    <div class="media-grid" *ngIf="sharedImages.length > 0; else noImages">
+                        <div *ngFor="let image of sharedImages; let i = index" class="media-item image-item">
+                            <img [src]="image.url" [alt]="image.name" (click)="openImageViewer(i)">
+                        </div>
+                    </div>
+                    <ng-template #noImages>
+                        <div class="empty-state">
+                            <i class="fas fa-image"></i>
+                            <p>Không có ảnh nào được chia sẽ</p>
+                        </div>
+                    </ng-template>
+                </div>
+
+                <!-- Shared Files -->
+                <div class="media-subsection">
+                    <h4 class="section-title">Shared Files</h4>
+                    <div class="file-list" *ngIf="sharedFiles.length > 0; else noFiles">
+                        <div *ngFor="let file of sharedFiles" class="file-item" (click)="openFileDownloadModal(file)">
+                            <div class="file-icon" [style.color]="getFileTypeColor(file)">
+                                <i [class]="getFileIcon(file)"></i>
+                            </div>
+                            <div class="file-info">
+                                <div class="file-name">{{ file.name }}</div>
+                                <div class="file-size">{{ file.size }}</div>
+                            </div>
+                            <div class="file-download-icon">
+                                <i class="fas fa-download"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <ng-template #noFiles>
+                        <div class="empty-state">
+                            <i class="fas fa-file"></i>
+                            <p>Không có file nào được chia sẽ</p>
+                        </div>
+                    </ng-template>
+                </div>
+
+
+            </div>
+        </div>
+
+        <!-- Options Tab -->
+        <div *ngIf="activeTab === 'options'" class="tab-panel">
+            <div class="options-section">
+                <h4 class="section-title">Chat Options</h4>
+
+                <button class="option-item" (click)="onCreateGroup()">
+                    <div class="option-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="option-content">
+                        <span class="option-title">Tạo nhóm</span>
+                        <span class="option-description">Tạo nhóm chat mới với người này</span>
+                    </div>
+                    <i class="fas fa-chevron-right option-arrow"></i>
+                </button>
+
+               
+
+                <button class="option-item danger" (click)="openDeleteConversationModal()">
+                    <div class="option-icon">
+                        <i class="fas fa-trash"></i>
+                    </div>
+                    <div class="option-content">
+                        <span class="option-title">Xóa cuộc trò chuyện</span>
+                        <span class="option-description">Xóa toàn bộ tin nhắn trong cuộc trò chuyện này</span>
+                    </div>
+                    <i class="fas fa-chevron-right option-arrow"></i>
+                </button>
+
+                <button class="option-item danger" (click)="openBlockModal()">
+                    <div class="option-icon">
+                        <i class="fas fa-ban"></i>
+                    </div>
+                    <div class="option-content">
+                        <span class="option-title">Block User</span>
+                        <span class="option-description">Chặn người dùng nhắn tin với bạn</span>
+                    </div>
+                    <i class="fas fa-chevron-right option-arrow"></i>
+                </button>
+
+                <button class="option-item danger" (click)="openReportModal()">
+                    <div class="option-icon">
+                        <i class="fas fa-flag"></i>
+                    </div>
+                    <div class="option-content">
+                        <span class="option-title">Report User</span>
+                        <span class="option-description">Báo cáo người dùng</span>
+                    </div>
+                    <i class="fas fa-chevron-right option-arrow"></i>
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- File Download Modal -->
+<div *ngIf="isFileDownloadModalVisible" class="modal-overlay" (click)="closeFileDownloadModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Tải xuống tệp</h3>
+            <button class="modal-close" (click)="closeFileDownloadModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <!-- Add ng-container to ensure selectedFile is not null before rendering -->
+        <ng-container *ngIf="selectedFile">
+            <div class="modal-body">
+                <div class="file-info-large">
+                    <div class="file-icon-large" [style.color]="getFileTypeColor(selectedFile)">
+                        <i [class]="getFileIcon(selectedFile)"></i>
+                    </div>
+                    <div>
+                        <h4>{{ selectedFile.name }}</h4>
+                        <p class="file-size">Kích thước: {{ selectedFile.size }}</p>
+                    </div>
+                </div>
+                <div class="warning-message">
+                    <div class="warning-icon">
+                        <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                    </div>
+                    <div class="warning-text">
+                        <p class="font-medium text-gray-800 mb-2">Cảnh báo bảo mật</p>
+                        <p class="text-sm text-gray-600">Chỉ tải xuống tệp từ những nguồn bạn tin tưởng. Tệp có thể chứa virus hoặc phần mềm độc hại có thể gây hại cho thiết bị của bạn.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" (click)="closeFileDownloadModal()">Hủy</button>
+                <button class="btn btn-primary" (click)="downloadFile()">
+                    <i class="fas fa-download"></i> Tải xuống
+                </button>
+            </div>
+        </ng-container>
+    </div>
+</div>
+<!-- Notification Settings Modal -->
+
+
+<!-- Delete Conversation Modal -->
+<div *ngIf="isDeleteConversationModalVisible" class="modal-overlay" (click)="closeDeleteConversationModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Xóa cuộc trò chuyện</h3>
+            <button class="modal-close" (click)="closeDeleteConversationModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="warning-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <p class="modal-description">
+                <strong>Cảnh báo:</strong> Bạn có chắc chắn muốn xóa toàn bộ cuộc trò chuyện này không?
+            </p>
+            <p class="modal-subdescription">
+                Tất cả tin nhắn, hình ảnh, file và dữ liệu trong cuộc trò chuyện sẽ bị xóa vĩnh viễn và không thể khôi
+                phục.
+            </p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" (click)="closeDeleteConversationModal()">Hủy</button>
+                <button class="btn btn-danger" (click)="confirmDeleteConversation()">
+                    <i class="fas fa-trash"></i>
+                    Xóa cuộc trò chuyện
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Block User Modal -->
+<div *ngIf="isBlockModalVisible" class="modal-overlay" (click)="closeBlockModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Block User</h3>
+            <button class="modal-close" (click)="closeBlockModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p class="modal-description">Bạn có chắc chắn muốn chặn người dùng này không? Họ sẽ không thể nhắn tin cho
+                bạn nữa.</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" (click)="closeBlockModal()">Đóng</button>
+                <button class="btn btn-danger" (click)="confirmBlock()">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report User Modal -->
+<div *ngIf="isReportModalVisible" class="modal-overlay" (click)="closeReportModal()">
+    <div class="modal-content report-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Report User</h3>
+            <button class="modal-close" (click)="closeReportModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p class="modal-description">Vui lòng chọn lý do báo cáo người dùng này:</p>
+
+            <div class="report-reasons">
+                <label *ngFor="let reason of reportReasons" class="report-reason"
+                    [class.selected]="selectedReportReason === reason">
+                    <input type="radio" name="reportReason" [value]="reason" [(ngModel)]="selectedReportReason">
+                    <span class="reason-text">{{ reason }}</span>
+                    <i class="fas fa-check reason-check"></i>
+                </label>
+            </div>
+
+            <div *ngIf="selectedReportReason === 'Other'" class="custom-reason">
+                <textarea [(ngModel)]="customReportReason" placeholder="Please provide more details..."
+                    class="custom-reason-input" rows="3">
+                </textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" (click)="closeReportModal()">Cancel</button>
+                <button class="btn btn-danger" (click)="submitReport()" [disabled]="!selectedReportReason">
+                    Submit Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Viewer -->
+<app-image-viewer [images]="imageViewerImages" [currentIndex]="imageViewerCurrentIndex"
+    [isVisible]="isImageViewerVisible" (close)="closeImageViewer()" (indexChange)="onImageViewerIndexChange($event)">
+</app-image-viewer>

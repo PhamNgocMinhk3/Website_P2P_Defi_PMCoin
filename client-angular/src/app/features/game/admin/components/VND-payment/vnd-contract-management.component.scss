@@ -1,0 +1,219 @@
+:host {
+  display: block;
+  padding: 2rem;
+  background-color: #0c0c1e;
+  color: #e0e0e0;
+}
+
+.vnd-management-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 1rem;
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #fff;
+    margin: 0;
+  }
+}
+
+.refresh-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.management-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-header h3 {
+  font-size: 1.5rem;
+  margin: 0 0 1rem 0;
+  font-weight: 500;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #4a90e2;
+
+  .stat-label {
+    font-size: 0.9rem;
+    color: #a0a0a0;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #fff;
+  }
+}
+
+.treasury-controls .control-group {
+  max-width: 500px;
+  
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  .input-group {
+    display: flex;
+    gap: 0.5rem;
+
+    input {
+      flex-grow: 1;
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+
+      &:focus {
+        outline: none;
+        border-color: #4a90e2;
+      }
+    }
+  }
+
+  small {
+    display: block;
+    margin-top: 0.5rem;
+    color: #a0a0a0;
+    font-size: 0.85rem;
+  }
+
+  .warning-text {
+    color: #f39c12;
+  }
+}
+
+.action-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: #fff;
+
+  &.deposit { background-color: #27ae60; }
+  &:hover:not(:disabled) { filter: brightness(1.1); }
+  &:disabled { cursor: not-allowed; opacity: 0.5; }
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  
+  th, td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  th {
+    font-weight: 600;
+    color: #a0a0a0;
+  }
+
+  .no-data {
+    text-align: center;
+    padding: 2rem;
+    color: #a0a0a0;
+  }
+
+  .text-right {
+    text-align: right;
+  }
+  .text-center { text-align: center; }
+  .tx-link { text-decoration: none; font-size: 1.2rem; }
+}
+
+.status-badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &.status-deposit { background-color: rgba(39, 174, 96, 0.2); color: #27ae60; }
+  &.status-withdraw { background-color: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+  &.status-completed { background-color: rgba(39, 174, 96, 0.2); color: #27ae60; }
+  &.status-pending { background-color: rgba(243, 156, 18, 0.2); color: #f39c12; }
+  &.status-failed, &.status-failed_no_wallet { background-color: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  gap: 10px;
+
+  .pagination-button {
+    background-color: var(--primary-color);
+    color: var(--text-color-light);
+    border: none;
+    padding: 8px 15px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+
+    &:hover:not(:disabled) {
+      background-color: var(--primary-color-dark);
+    }
+
+    &:disabled {
+      background-color: var(--disabled-color);
+      cursor: not-allowed;
+    }
+  }
+
+  .page-info {
+    font-size: 1rem;
+    color: var(--text-color);
+  }
+}

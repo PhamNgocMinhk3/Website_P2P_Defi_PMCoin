@@ -1,0 +1,57 @@
+// Dùng :host để áp style cho chính thẻ <app-chat-header>
+:host {
+  display: block; // Cần thiết để component hoạt động như một khối
+  flex-shrink: 0; // QUAN TRỌNG: Ngăn component này co lại
+}
+
+// Các style bên trong header
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #ffffff;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.name-status .name {
+  font-weight: 600;
+}
+
+.name-status .status {
+  font-size: 0.875rem;
+  color: #28a745;
+}
+
+.action-icons {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f0f2f5;
+  }
+}

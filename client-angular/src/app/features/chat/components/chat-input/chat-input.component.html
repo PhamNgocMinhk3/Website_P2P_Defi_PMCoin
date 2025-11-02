@@ -1,0 +1,63 @@
+<div class="input-wrapper" (click)="$event.stopPropagation()" [class.disabled]="disabled">
+
+    <input type="file" #fileInput (change)="onFileSelected($event)" class="hidden" />
+    <input type="file" #imageInput (change)="onImageSelected($event)" class="hidden" accept="image/png, image/jpeg"
+        multiple />
+
+    <div *ngIf="isActionsPopupVisible" class="actions-popup">
+        <button (click)="triggerImageUpload()" class="action-popup-item" [disabled]="disabled">
+            <i class="fa-solid fa-image"></i><span>Gửi ảnh</span>
+        </button>
+        <button (click)="triggerFileUpload()" class="action-popup-item" [disabled]="disabled">
+            <i class="fa-solid fa-file-arrow-up"></i><span>Gửi File</span>
+        </button>
+        <!-- Change icon and text based on recording state -->
+        <button (click)="recordAudio.emit()" class="action-popup-item" [disabled]="disabled" [class.recording]="isRecording">
+            <i class="fa-solid" [ngClass]="isRecording ? 'fa-stop' : 'fa-microphone'"></i>
+            <span>{{ isRecording ? 'Dừng ghi' : 'Ghi âm' }}</span>
+        </button>
+        <button (click)="openGifModal.emit()" class="action-popup-item" [disabled]="disabled">
+            <i class="fa-solid fa-note-sticky"></i><span>Gửi GIF</span>
+        </button>
+        <button (click)="openPollModal.emit()" class="action-popup-item" [disabled]="disabled">
+            <i class="fa-solid fa-chart-simple"></i><span>Tạo bình chọn</span>
+        </button>
+        <button (click)="openAppointmentCreator.emit()" class="action-popup-item" [disabled]="disabled">
+            <i class="fa-solid fa-calendar-plus"></i><span>Tạo lịch hẹn</span>
+        </button>
+    </div>
+
+    <div *ngIf="isEmojiPickerVisible" class="custom-emoji-picker">
+        <div class="emoji-search-bar"><input type="text" placeholder="Tìm kiếm emoji" (input)="filterEmojis($event)" />
+        </div>
+        <div class="emoji-content">
+            <h3 class="emoji-category-title">{{ emojiData[activeEmojiCategoryIndex].name }}</h3>
+            <div class="emoji-grid">
+                <span *ngFor="let emoji of filteredEmojis" (click)="selectEmoji(emoji)" class="emoji-item">{{ emoji
+                    }}</span>
+            </div>
+        </div>
+        <div class="emoji-tabs">
+            <button *ngFor="let category of emojiData; let i = index" (click)="selectEmojiCategory(i, $event)"
+                [ngClass]="{'active': i === activeEmojiCategoryIndex}" class="emoji-tab" [title]="category.name">
+                {{ category.icon }}
+            </button>
+        </div>
+    </div>
+
+    <button class="action-button" (click)="toggleActionsPopup($event)" [disabled]="disabled">
+        <i class="fa-solid fa-plus-circle"></i>
+    </button>
+
+    <div class="message-input-container">
+        <input [(ngModel)]="newMessage" (keydown.enter)="onSendMessage()" class="message-input-field"
+            placeholder="Nhập tin nhắn..." type="text" [disabled]="disabled" />
+        <button class="action-button" (click)="toggleEmojiPicker($event)" [disabled]="disabled">
+            <i class="fa-regular fa-face-laugh-beam"></i>
+        </button>
+    </div>
+
+    <button class="action-button send-button" (click)="onSendMessage()" [disabled]="disabled || !newMessage.trim()">
+        <i class="fas fa-paper-plane"></i>
+    </button>
+</div>

@@ -1,0 +1,198 @@
+<div class="vnd-management-container">
+  <div class="management-header">
+    <h1>🏦 Quản Lý Kho Bạc VND</h1>
+    <button class="refresh-btn" (click)="loadAllData()" [disabled]="isLoading" title="Làm mới toàn bộ dữ liệu">
+      <span *ngIf="isLoading">Đang tải...</span>
+      <span *ngIf="!isLoading">🔄 Làm mới</span>
+    </button>
+  </div>
+
+  <!-- Stats Section -->
+  <div class="management-section">
+    <div class="section-header">
+      <h3>📊 Thống Kê Kho Bạc</h3>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Số Dư Kho Bạc (Contract)</div>
+        <div class="stat-value">{{ stats.treasuryBalance | number:'1.0-6' }} VNDT</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Số Dư VNDT Của Admin</div>
+        <div class="stat-value">{{ stats.adminVndtBalance | number:'1.0-6' }} VNDT</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Lượng Đã Approve</div>
+        <div class="stat-value">{{ stats.allowance | number:'1.0-6' }} VNDT</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Treasury Deposit Section -->
+  <div class="management-section">
+    <div class="section-header">
+      <h3>💰 Nạp Tiền Vào Kho Bạc</h3>
+    </div>
+    <div class="treasury-controls">
+      <div class="control-group">
+        <label for="depositAmount">Số Lượng VNDT Cần Nạp</label>
+        <div class="input-group">
+          <input id="depositAmount" type="text" [(ngModel)]="stats.depositAmount" placeholder="Ví dụ: 1000000">
+          <button class="action-btn deposit" (click)="handleDeposit()" [disabled]="stats.isApproving || stats.isDepositing">
+            <span *ngIf="stats.isApproving">Đang Approve...</span>
+            <span *ngIf="stats.isDepositing && !stats.isApproving">Đang Nạp...</span>
+            <span *ngIf="!stats.isApproving && !stats.isDepositing">
+              {{ needsApproval ? 'Approve & Nạp' : 'Nạp Tiền' }}
+            </span>
+          </button>
+        </div>
+        <small *ngIf="needsApproval" class="warning-text">
+          Cần approve contract để chi tiêu {{ stats.depositAmount | number }} VNDT từ ví của bạn.
+        </small>
+        <small *ngIf="!needsApproval && stats.depositAmount">
+          Bạn đã approve đủ. Sẵn sàng để nạp.
+        </small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transaction Log Section -->
+  <div class="management-section">
+    <div class="section-header">
+      <h3>📜 LỊCH SỬ GIAO DỊCH VND ({{ totalTransactions }} giao dịch)</h3>
+    </div>
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Thời Gian</th>
+            <th>Người Dùng</th>
+            <th>Loại</th>
+            <th class="text-right">Số Lượng</th>
+            <th>Trạng Thái</th>
+            <!-- ADDED: Columns for bank details -->
+            <th>Ngân Hàng</th>
+            <th>Số Tài Khoản</th>
+            <th class="text-center">Tx Hash</th>
+            <th class="text-center">Hành Động</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let tx of transactions; trackBy: trackByTransactionId">
+            <td>{{ tx.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ tx.userId }}</td>
+            <td>
+              <span class="status-badge" [ngClass]="tx.type === 'DEPOSIT' ? 'status-deposit' : (tx.type === 'WITHDRAWAL' ? 'status-withdraw' : '')">
+                {{ tx.type }}
+              </span>
+            </td>
+            <td class="text-right">{{ tx.amount | number:'1.0-2' }}</td>
+            <td>
+              <span class="status-badge" [ngClass]="'status-' + tx.status.toLowerCase()">
+                {{ tx.status }}
+              </span>
+            </td>
+            <!-- ADDED: Display bank details -->
+            <td>
+              @if(tx.type === 'WITHDRAWAL') {
+                <span>{{ tx.bankName }}</span>
+              }
+            </td>
+            <td>
+              @if(tx.type === 'WITHDRAWAL') {
+                <span>{{ tx.bankAccountNumber }}</span>
+              }
+            </td>
+            <td class="text-center">
+              <a *ngIf="tx.transactionHash" [href]="'https://scan.test.btcs.network/tx/' + tx.transactionHash" target="_blank" class="tx-link" title="View on explorer">
+                🔗
+              </a>
+            </td>
+            <td class="text-center action-cell">
+              @if (tx.type === 'WITHDRAWAL' && tx.status === 'PENDING_ADMIN_APPROVAL') {
+                <div class="action-buttons">
+                  <button class="action-btn view" (click)="viewTransactionDetails(tx)">Xem</button>
+                  <button class="action-btn approve" (click)="approveWithdrawal(tx.id)" [disabled]="isLoading">Duyệt</button>
+                  <button class="action-btn reject" (click)="rejectWithdrawal(tx.id)" [disabled]="isLoading">Từ chối</button>
+                </div>
+              } @else {
+                <span class="text-gray-400">-</span>
+              }
+            </td>
+          </tr>
+          <tr *ngIf="transactions.length === 0 && !isLoading">
+            <td colspan="9" class="no-data">Không có giao dịch nào.</td>
+          </tr>
+          <tr *ngIf="isLoading">
+            <td colspan="9" class="no-data">Đang tải dữ liệu...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- Pagination Controls -->
+    <div *ngIf="totalPages > 1" class="pagination-controls">
+      <button class="pagination-button" (click)="previousPage()" [disabled]="currentPage === 1 || isLoading">
+        &laquo; Trước
+      </button>
+      <span class="page-info">Trang {{ currentPage }} / {{ totalPages }}</span>
+      <button class="pagination-button" (click)="nextPage()" [disabled]="currentPage === totalPages || isLoading">
+        Sau &raquo;
+      </button>
+    </div>
+  </div>
+
+  <!-- ADDED: Transaction Details Modal -->
+  @if (selectedTransaction) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm p-4" (click)="closeTransactionDetails()">
+      <div class="bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl max-w-lg w-full mx-4 flex flex-col" (click)="$event.stopPropagation()">
+
+        <!-- Modal Header -->
+        <div class="relative p-4 flex-shrink-0 flex items-center justify-between border-b border-gray-700">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+              <span class="text-white text-lg font-bold">ℹ️</span>
+            </div>
+            <div class="text-left">
+              <h3 class="text-lg font-bold text-white">Chi Tiết Giao Dịch Rút Tiền</h3>
+              <p class="text-xs text-gray-400 font-mono">ID: {{ selectedTransaction.id }}</p>
+            </div>
+          </div>
+          <button (click)="closeTransactionDetails()" class="w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded-full flex items-center justify-center transition-colors">
+            <i class="fas fa-times text-gray-300"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 overflow-y-auto text-white">
+          <div class="space-y-4">
+            <div class="detail-item"><span class="label">Người dùng ID:</span> <span class="value font-mono">{{ selectedTransaction.userId }}</span></div>
+            <div class="detail-item"><span class="label">Số tiền:</span> <span class="value font-bold text-lg text-orange-400">{{ selectedTransaction.amount | number:'1.0-2' }} VND</span></div>
+            <div class="detail-item"><span class="label">Ngân hàng:</span> <span class="value">{{ selectedTransaction.bankName }}</span></div>
+            <div class="detail-item"><span class="label">Số tài khoản:</span> <span class="value font-mono">{{ selectedTransaction.bankAccountNumber }}</span></div>
+            <div class="detail-item"><span class="label">Tên chủ tài khoản:</span> <span class="value font-bold">{{ selectedTransaction.bankAccountName }}</span></div>
+            <div class="detail-item"><span class="label">Thời gian tạo:</span> <span class="value">{{ selectedTransaction.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</span></div>
+            <div class="detail-item"><span class="label">Trạng thái:</span>
+              <span class="status-badge" [ngClass]="'status-' + selectedTransaction.status.toLowerCase()">
+                {{ selectedTransaction.status }}
+              </span>
+            </div>
+            @if(selectedTransaction.transactionHash) {
+              <div class="detail-item"><span class="label">Tx Hash (Khóa Token):</span>
+                <a [href]="'https://scan.test.btcs.network/tx/' + selectedTransaction.transactionHash" target="_blank" class="tx-link-modal">
+                  {{ selectedTransaction.transactionHash }} 🔗
+                </a>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-4 flex-shrink-0 border-t border-gray-700 bg-gray-800/50">
+          <div class="flex justify-end gap-3">
+            <button (click)="closeTransactionDetails()" class="px-5 py-2 bg-gray-600 text-gray-200 rounded-lg font-bold hover:bg-gray-500 transition-all duration-300 shadow-sm min-w-[120px]">Đóng</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

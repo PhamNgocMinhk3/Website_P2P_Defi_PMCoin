@@ -1,0 +1,202 @@
+  :host {
+    display: block;
+    padding: 2rem;
+    background-color: #f0f2f5;
+    min-height: 100vh;
+  }
+
+  .quicksell-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  .header {
+    margin-bottom: 2rem;
+    h1 {
+      font-size: 2.5rem;
+      color: #1a202c;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      font-size: 1.1rem;
+      color: #718096;
+    }
+  }
+
+  .loading-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem;
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border-left-color: #3498db;
+      animation: spin 1s ease infinite;
+    }
+    p {
+      margin-top: 1rem;
+      font-size: 1.1rem;
+      color: #4a5568;
+    }
+  }
+
+  .content-grid {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .bento-item {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 1rem;
+
+    h3 {
+      font-size: 1.5rem;
+      color: #2d3748;
+      margin: 0;
+    }
+  }
+
+  /* Balances & Management Section */
+  .balances-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+
+    .balance-item {
+      background-color: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+
+      .token-symbol {
+        display: block;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 0.5rem;
+      }
+      .token-balance {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1a202c;
+        word-break: break-all;
+      }
+    }
+  }
+
+  .management-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+
+    @media (min-width: 992px) {
+      grid-template-columns: 1fr 1fr; /* Use 2 columns only on larger screens */
+    }
+
+    h4 {
+      font-size: 1.1rem;
+      color: #4a5568;
+      margin-bottom: 1rem;
+    }
+
+    .actions-section {
+      background-color: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .input-group {
+      display: flex;
+      flex-wrap: wrap; /* Allow items to wrap on small screens */
+      gap: 0.5rem;
+      input[type="number"] {
+        flex-grow: 1;
+        padding: 0.75rem;
+        border: 1px solid #cbd5e0;
+        border-radius: 6px;
+        font-size: 1rem;
+        &:focus {
+          outline: none;
+          border-color: #3182ce;
+          box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+        }
+        // FIX: Prevent input from overflowing its container on large numbers
+        min-width: 0;
+      }
+      .action-button {
+        flex-shrink: 0; /* Prevent button from shrinking */
+        flex-grow: 1; /* Allow button to grow */
+        @media (min-width: 500px) { flex-grow: 0; } /* Don't grow on wider screens */
+      }
+    }
+
+    .action-button {
+      background-color: #48bb78; /* Green for deposit */
+      color: white;
+      border: none;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      font-weight: 600;
+      &:hover:not(:disabled) { background-color: #38a169; }
+      &:disabled { background-color: #a0aec0; cursor: not-allowed; }
+    }
+    .withdraw-button { background-color: #e53e3e; /* Red for withdraw */ }
+    .withdraw-button:hover:not(:disabled) { background-color: #c53030; }
+  }
+  .withdraw-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.75rem;
+  }
+  .balances-display {
+    @media (min-width: 768px) {
+      grid-column: 1 / -1; /* Span full width */
+    }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner-small {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 0.6s linear infinite;
+  }
+
+  /* Helper class to hide number input spinners */
+  .hide-number-spinners {
+    // Hide spinner for Firefox
+    appearance: textfield;
+    -moz-appearance: textfield;
+
+    // Hide spinner for Chrome, Safari, Edge, Opera
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      appearance: none;
+      margin: 0;
+    }
+
+    // Ensure the input doesn't overflow in flex containers
+    min-width: 0;
+  }

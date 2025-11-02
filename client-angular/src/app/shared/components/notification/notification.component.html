@@ -1,0 +1,18 @@
+<div *ngIf="notification$ | async as notification" class="notification-toast"
+    [class.success]="notification.type === 'success'" 
+    [class.error]="notification.type === 'error'"
+    [class.info]="notification.type === 'info'"
+    [class.warning]="notification.type === 'warning'">
+
+    <div class="notification-icon">
+        {{ getNotificationIcon(notification.type) }}
+    </div>
+
+    <div class="notification-message">
+        {{ notification.message }}
+    </div>
+
+    <button class="notification-close" (click)="closeNotification()">
+        ×
+    </button>
+</div>

@@ -1,0 +1,283 @@
+// Color Variables
+$primary-color: #4f46e5;
+$secondary-color: #7c3aed;
+$success-color: #10b981;
+$warning-color: #f59e0b;
+$error-color: #ef4444;
+$info-color: #3b82f6;
+
+// Glass Effect
+$glass-background: rgba(255, 255, 255, 0.05);
+$glass-border: rgba(255, 255, 255, 0.1);
+
+// Text Colors
+$text-primary: #ffffff;
+$text-secondary: #9ca3af;
+$text-muted: #6b7280;
+
+.wallet-overview-card {
+  background: $glass-background;
+  backdrop-filter: blur(20px);
+  border-radius: 1.5rem;
+  border: 1px solid $glass-border;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  grid-column: span 2;
+
+  @media (max-width: 1200px) {
+    grid-column: span 1;
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      $primary-color,
+      transparent
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover {
+    transform: translateY(-5px);
+    border-color: $primary-color;
+    box-shadow: 0 20px 40px rgba($primary-color, 0.1);
+
+    &::before {
+      opacity: 1;
+    }
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: $text-primary;
+      margin: 0;
+
+      .title-icon {
+        font-size: 1.5rem;
+      }
+    }
+
+    .currency-toggle {
+      background: $primary-color;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #6366f1;
+        transform: scale(1.05);
+      }
+    }
+  }
+
+  .card-content {
+    .overview-main {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 2rem;
+      align-items: start;
+      margin-bottom: 2rem;
+
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+    }
+
+    .total-value {
+      .value-label {
+        display: block;
+        font-size: 0.875rem;
+        color: $text-secondary;
+        margin-bottom: 0.5rem;
+      }
+
+      .value-amount {
+        .primary-value {
+          display: block;
+          font-size: 2.5rem;
+          font-weight: 700;
+          color: $text-primary;
+          line-height: 1.2;
+
+          @media (max-width: 768px) {
+            font-size: 2rem;
+          }
+        }
+
+        .secondary-value {
+          display: block;
+          font-size: 1rem;
+          color: $text-secondary;
+          margin-top: 0.25rem;
+        }
+      }
+    }
+
+    .coin-3d-container {
+      width: 120px;
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+
+      .coin-placeholder {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, $primary-color, $secondary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: coinRotate 3s linear infinite;
+        box-shadow: 0 10px 30px rgba($primary-color, 0.3);
+        position: absolute;
+        z-index: 1;
+
+        .coin-icon {
+          font-size: 3rem;
+          color: white;
+        }
+      }
+
+      // Three.js canvas will be positioned here
+      canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 2;
+        border-radius: 50%;
+      }
+    }
+
+    .token-list {
+      .token-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-radius: 1rem;
+        background: rgba($glass-background, 0.5);
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: rgba($primary-color, 0.1);
+          transform: translateX(5px);
+        }
+
+        .token-info {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+
+          .token-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: $glass-background;
+            border-radius: 50%;
+            border: 1px solid $glass-border;
+          }
+
+          .token-details {
+            display: flex;
+            flex-direction: column;
+
+            .token-symbol {
+              font-weight: 600;
+              color: $text-primary;
+              font-size: 1rem;
+            }
+
+            .token-name {
+              font-size: 0.875rem;
+              color: $text-secondary;
+            }
+          }
+        }
+
+        .token-balance {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+
+          .balance-amount {
+            font-weight: 600;
+            color: $text-primary;
+            font-size: 1rem;
+          }
+
+          .balance-value {
+            font-size: 0.875rem;
+            color: $text-secondary;
+          }
+
+          .balance-change {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            margin-top: 0.25rem;
+
+            &.positive {
+              color: $success-color;
+              background: rgba($success-color, 0.1);
+            }
+
+            &.negative {
+              color: $error-color;
+              background: rgba($error-color, 0.1);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes coinRotate {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+// Glow effect for 3D coin
+.coin-3d-container:hover {
+  .coin-placeholder {
+    box-shadow: 0 10px 30px rgba($primary-color, 0.4),
+      0 0 50px rgba($primary-color, 0.2),
+      inset 0 0 20px rgba(255, 255, 255, 0.1);
+  }
+}

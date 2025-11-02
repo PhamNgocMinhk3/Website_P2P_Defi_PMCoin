@@ -1,0 +1,101 @@
+<div class="link-management">
+  <div class="header">
+    <h3>Shared Links</h3>
+    <p class="subtitle">Manage all links shared in conversations</p>
+  </div>
+
+  <div class="filters">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Search links..." [(ngModel)]="searchTerm" (input)="onSearchChange()"
+        class="search-input" />
+    </div>
+
+    <div class="filter-tabs">
+      <button class="filter-tab" [class.active]="selectedFilter === 'all'"
+        (click)="selectedFilter = 'all'; onFilterChange()">
+        All ({{ sharedLinks.length }})
+      </button>
+      <button class="filter-tab" [class.active]="selectedFilter === 'safe'"
+        (click)="selectedFilter = 'safe'; onFilterChange()">
+        Safe ({{ getSafeLinksCount() }})
+      </button>
+      <button class="filter-tab" [class.active]="selectedFilter === 'unsafe'"
+        (click)="selectedFilter = 'unsafe'; onFilterChange()">
+        ⚠️ Unsafe ({{ getUnsafeLinksCount() }})
+      </button>
+    </div>
+  </div>
+
+  <div class="links-list">
+    <div *ngFor="let link of filteredLinks; trackBy: trackByLinkId" class="link-item" [class.unsafe]="link.isUnsafe"
+      (click)="openLink(link)">
+      <div class="link-icon">
+        {{ getLinkIcon(link.url) }}
+      </div>
+
+      <div class="link-content">
+        <div class="link-title">{{ link.title }}</div>
+        <div class="link-url">{{ link.url }}</div>
+        <div class="link-meta">
+          <span class="time">{{ formatDate(link.timestamp) }}</span>
+          <span class="unsafe-badge" *ngIf="link.isUnsafe">⚠️ Potentially Unsafe</span>
+        </div>
+      </div>
+
+      <div class="link-actions">
+        <button class="action-btn copy-btn" (click)="copyLink(link, $event)" title="Copy link">
+          📋
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="filteredLinks.length === 0" class="empty-state">
+      <div class="empty-icon">🔗</div>
+      <h4>No links found</h4>
+      <p *ngIf="searchTerm">Try adjusting your search terms</p>
+      <p *ngIf="!searchTerm">Links shared in conversations will appear here</p>
+    </div>
+  </div>
+</div>
+
+<!-- Security Warning Modal -->
+<div class="modal-overlay" *ngIf="showSecurityWarning" (click)="closeSecurityWarning()">
+  <div class="security-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>⚠️ Security Warning</h3>
+    </div>
+
+    <div class="modal-content">
+      <p>This link may be potentially unsafe:</p>
+      <div class="warning-link">{{ selectedLink?.url }}</div>
+
+      <div class="warning-reasons">
+        <h4>Potential risks:</h4>
+        <ul>
+          <li *ngIf="selectedLink && isExecutableFile(selectedLink.url)">
+            Contains downloadable executable files
+          </li>
+          <li *ngIf="selectedLink && isShortUrl(selectedLink.url)">
+            Uses URL shortening service
+          </li>
+          <li>May lead to malicious websites</li>
+          <li>Could contain malware or phishing attempts</li>
+        </ul>
+      </div>
+
+      <p class="warning-advice">
+        Only proceed if you trust the source and know what you're downloading.
+      </p>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-danger" (click)="proceedToLink(selectedLink!)">
+        Proceed Anyway
+      </button>
+      <button class="btn btn-secondary" (click)="closeSecurityWarning()">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>

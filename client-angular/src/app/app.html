@@ -1,0 +1,9 @@
+<div class="app-container">
+  <app-main-menu *ngIf="!isAuthPage && !isHomePage && !isDashboardPage"></app-main-menu>
+
+  <main class="main-content" [class.with-header]="!isAuthPage && !isHomePage && !isDashboardPage"
+    [class.full-height]="isAuthPage || isHomePage">
+    <router-outlet></router-outlet>
+  </main>
+  <app-notification></app-notification>
+</div>

@@ -1,0 +1,223 @@
+<div class="chat-content-area" [style.--chat-theme-color]="themeColor$ | async">
+    <!-- Show chat content only if a user is selected -->
+    <ng-container *ngIf="(selectedUser$ | async) as user; else noChatSelected">
+        <app-chat-header [user]="getChatHeaderUser(user)" (toggleInfoSidebar)="toggleInfoSidebar.emit()"
+            (openSearchModal)="openSearchModal()"
+            (startAudioCall)="!user.isGroup && startCall('audio')"
+            (startVideoCall)="!user.isGroup && startCall('video')" [isGroupCall]="user.isGroup ?? false">
+        </app-chat-header>
+
+
+        <div class="message-list-container"
+            [style.background-image]="(backgroundUrl$ | async) ? 'url(' + (backgroundUrl$ | async) + ')' : null"
+            [style.background-size]="'cover'" [style.background-position]="'center'"
+            [style.background-repeat]="'no-repeat'">
+            <app-chat-message *ngFor="let msg of messages; let i = index" [message]="msg"
+                [showSenderInfo]="(selectedUser$ | async)?.isGroup && shouldShowSenderInfo(msg, i)"
+                [currentUser]="currentUser" (vote)="handleVote($event)" (reactionSelected)="onReactionSelected($event)"
+                (imageClick)="handleImageClick($event)"
+                (forwardMessage)="onForwardMessage($event)" (deleteMessage)="onDeleteMessage($event)" (openReactionPicker)="handleOpenReactionPicker($event.message, $event.event)"
+                (addPollOption)="onAddPollOption($event)">
+            </app-chat-message>
+        </div>
+
+        <!-- Blocked User Overlay -->
+        <div *ngIf="user.isBlockedByYou || user.isBlockedByOther" class="blocked-overlay">
+            <div class="blocked-content">
+                <ng-container *ngIf="user.isBlockedByYou">
+                    <p>Bạn đã chặn {{ user.name }}.</p>
+                    <p>Bỏ chặn để tiếp tục nhắn tin.</p>
+                    <button class="unblock-btn" (click)="onUnblockUser()">Bỏ chặn</button>
+                </ng-container>
+                <ng-container *ngIf="user.isBlockedByOther">
+                    <p>Bạn đã bị người này chặn.</p>
+                    <p>Bạn không thể gửi tin nhắn cho cuộc trò chuyện này.</p>
+                </ng-container>
+            </div>
+        </div>
+
+        <app-chat-input 
+            (sendMessage)="handleSendMessage($event)" 
+            (sendFile)="handleSendFile($event)"
+            (sendImages)="handleSendImages($event)" (recordAudio)="handleRecordAudio()" (openPollModal)="openPollModal()"
+            (openGifModal)="openGifModal()" 
+            (openAppointmentCreator)="openAppointmentCreator()" [isRecording]="isRecording"
+            [disabled]="(isInputDisabled$ | async) ?? false" [isGroup]="user.isGroup">
+        </app-chat-input> 
+    </ng-container>
+
+    <!-- Placeholder when no chat is selected -->
+    <ng-template #noChatSelected>
+        <div class="no-chat-selected-placeholder">
+            <div class="placeholder-content">
+                <i class="fas fa-comments placeholder-icon"></i>
+                <h2 class="placeholder-title">Chào mừng đến với DATK Chat</h2>
+                <p class="placeholder-text">Vui lòng chọn một cuộc hội thoại để bắt đầu nhắn tin.</p>
+            </div>
+        </div>
+    </ng-template>
+
+    <!-- Outgoing Call popup -->
+    <div *ngIf="isCalling" class="modal-overlay" (click)="endCall()">
+        <div class="modal-content call-popup" (click)="$event.stopPropagation()">
+            <h3 class="font-bold text-lg mb-2">{{ callType === 'video' ? 'Gọi video' : 'Gọi âm thanh' }}</h3>
+            <p class="text-sm text-gray-700">Đang gọi… Vui lòng chờ. Nếu 20s không bắt máy sẽ gửi thông báo nhỡ.</p>
+
+            <div class="flex gap-2 mt-4">
+                <!-- TODO: Add mute/camera toggle buttons here if needed -->
+                <button (click)="endCall()" class="w-full p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg">Hủy</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Incoming Call popup -->
+    <div *ngIf="incomingCallData" class="modal-overlay">
+        <div class="modal-content call-popup" (click)="$event.stopPropagation()">
+            <h3 class="font-bold text-lg mb-2">Cuộc gọi đến</h3>
+            <div class="caller-info my-4 text-center">
+                <!-- <img [src]="incomingCallData.callerAvatar" alt="Avatar" class="w-20 h-20 rounded-full mx-auto mb-2"> -->
+                <p class="font-semibold">{{ incomingCallData.callerName }}</p>
+                <p class="text-sm text-gray-600">Đang {{ incomingCallData.callType === 'video' ? 'gọi video' : 'gọi âm thanh' }} cho bạn...</p>
+            </div>
+
+            <div class="flex gap-4 mt-4">
+                <button (click)="rejectIncomingCall()" class="w-full p-3 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center"><i class="fas fa-phone-slash"></i></button>
+                <button (click)="acceptIncomingCall()" class="w-full p-3 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center"><i class="fas fa-phone"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Centered Reaction Picker Modal -->
+<div *ngIf="messageForReaction" class="modal-overlay" (click)="messageForReaction = null">
+    <div (click)="$event.stopPropagation()" class="reaction-picker modal-content">
+        <span (click)="onReactionSelected({ messageId: messageForReaction!.id, reaction: '❤️' })" class="reaction-emoji">❤️</span>
+        <span (click)="onReactionSelected({ messageId: messageForReaction!.id, reaction: '😂' })" class="reaction-emoji">😂</span>
+        <span (click)="onReactionSelected({ messageId: messageForReaction!.id, reaction: '👍' })" class="reaction-emoji">👍</span>
+        <span (click)="onReactionSelected({ messageId: messageForReaction!.id, reaction: '😮' })" class="reaction-emoji">😮</span>
+        <span (click)="onReactionSelected({ messageId: messageForReaction!.id, reaction: '😢' })" class="reaction-emoji">😢</span>
+        <span (click)="onReactionSelected({ messageId: messageForReaction!.id, reaction: '😡' })" class="reaction-emoji">😡</span>
+    </div>
+</div>
+
+<div *ngIf="isPollModalVisible" class="modal-overlay" (click)="closePollModal()">
+    <div class="modal-content poll-creation-modal" (click)="$event.stopPropagation()">
+        <h3 class="font-bold text-lg mb-4">Tạo bình chọn mới</h3>
+
+        <input [(ngModel)]="pollQuestion" type="text" placeholder="Câu hỏi bình chọn"
+            class="w-full p-2 border rounded-md mb-3">
+
+        <div class="poll-options-list">
+            <div *ngFor="let option of pollOptions; let i = index" class="flex items-center gap-2 mt-2">
+                <input [(ngModel)]="option.text" type="text" [placeholder]="'Lựa chọn ' + (i + 1)"
+                    class="flex-grow p-2 border rounded-md">
+                <button *ngIf="pollOptions.length > 2" (click)="removePollOption(i)" class="remove-option-btn">
+                    &times;
+                </button>
+            </div>
+        </div>
+
+        <button (click)="addPollOption()" class="add-option-btn" style="color: blue; margin-top: 10px">
+            + Thêm lựa chọn
+        </button>
+
+        <div class="flex gap-2 mt-6">
+            <button (click)="closePollModal()" class="w-full p-2 bg-gray-200 hover:bg-gray-300 rounded-lg">Hủy</button>
+            <button (click)="createPoll()" class="w-full p-2 text-white hover:opacity-90 rounded-lg"
+                [style.backgroundColor]="(themeColor$ | async) || '#3b82f6'">Tạo</button>
+        </div>
+    </div>
+</div>
+
+<div *ngIf="isGifModalVisible" class="modal-overlay" (click)="closeGifModal()">
+    <div class="modal-content gif-modal" (click)="$event.stopPropagation()">
+        <h3 class="font-bold text-lg mb-4">Chọn một ảnh GIF</h3>
+        <input [(ngModel)]="gifSearchTerm" (input)="searchGifs()" type="text" placeholder="Tìm kiếm GIF..."
+            class="w-full p-2 border rounded-md mb-4">
+        <div class="gif-grid">
+            <div *ngIf="isLoadingGifs" class="text-center col-span-full py-8">
+                <i class="fas fa-spinner fa-spin text-2xl text-gray-500"></i>
+                <p class="mt-2 text-gray-600">Đang tải GIF...</p>
+            </div>
+            <div *ngIf="!isLoadingGifs && gifResults.length === 0" class="text-center col-span-full py-8">
+                <i class="fas fa-search text-2xl text-gray-400"></i>
+                <p class="mt-2 text-gray-600">Không tìm thấy GIF nào</p>
+            </div>
+            <img *ngFor="let gif of gifResults" [src]="gif.preview_url || gif.url" [alt]="gif.title"
+                (click)="selectGif(gif)"
+                class="cursor-pointer rounded-md hover:opacity-80 hover:scale-105 transition-all duration-200 object-cover w-full h-32" />
+        </div>
+    </div>
+</div>
+
+<!-- Image Viewer -->
+<app-image-viewer [images]="imageViewerImages" [currentIndex]="imageViewerCurrentIndex"
+    [isVisible]="isImageViewerVisible" (close)="closeImageViewer()" (indexChange)="onImageViewerIndexChange($event)">
+</app-image-viewer>
+
+<!-- Group Creation Modal -->
+<app-group-creation [isVisible]="isGroupCreationVisible" (close)="closeGroupCreation()"
+    (groupCreated)="onGroupCreated($event)">
+</app-group-creation>
+
+<!-- Appointment Creator Modal: Render only when visible and currentUser is available -->
+<app-appointment-creator *ngIf="isAppointmentCreatorVisible && currentUser"
+  [isVisible]="isAppointmentCreatorVisible" [currentUser]="currentUser"
+  (close)="closeAppointmentCreator()" (appointmentCreated)="onAppointmentCreated($event)">
+</app-appointment-creator>
+
+<!-- Search Modal -->
+<app-search-modal [isVisible]="isSearchModalVisible" [messages]="messages" (close)="closeSearchModal()"
+    (scrollToMessage)="onScrollToMessage($event)">
+</app-search-modal>
+
+<!-- Add Poll Option Modal -->
+<div *ngIf="isAddPollOptionModalVisible" class="modal-overlay" (click)="closeAddPollOptionModal()">
+    <div class="add-poll-option-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>
+                <i class="fas fa-plus-circle"></i>
+                Thêm lựa chọn mới
+            </h3>
+            <button class="modal-close" (click)="closeAddPollOptionModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <div class="current-poll-info">
+                <h4>{{ currentPollQuestion }}</h4>
+                <div class="current-options">
+                    <div *ngFor="let option of currentPollOptions; let i = index" class="option-preview">
+                        <span class="option-number">{{ i + 1 }}</span>
+                        <span class="option-text">{{ option.text }}</span>
+                        <span class="option-votes">{{ option.votes }} phiếu</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="new-option-input">
+                <label for="newPollOption">Lựa chọn mới:</label>
+                <input id="newPollOption" type="text" [(ngModel)]="newPollOptionText" placeholder="Nhập lựa chọn mới..."
+                    class="option-input" maxlength="100" (keyup.enter)="confirmAddPollOption()" #optionInput>
+                <div class="char-count">{{ newPollOptionText.length }}/100</div>
+                <div *ngIf="isDuplicateOption()" class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Lựa chọn này đã tồn tại!
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="closeAddPollOptionModal()">
+                <i class="fas fa-times"></i>
+                Hủy
+            </button>
+            <button class="btn btn-primary" [disabled]="!newPollOptionText.trim() || isDuplicateOption()"
+                (click)="confirmAddPollOption()">
+                <i class="fas fa-plus"></i>
+                Thêm lựa chọn
+            </button>
+        </div>
+    </div>
+</div>

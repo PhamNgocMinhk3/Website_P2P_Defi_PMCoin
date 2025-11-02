@@ -1,0 +1,47 @@
+# .deployignore
+# Patterns to exclude from deployments and CI packages.
+# - This file is a developer-managed list of sensitive files and build artifacts.
+# - It is NOT automatically used by git. Integrate it into your CI/CD or deployment scripts,
+#   e.g., rsync --exclude-from=.deployignore or your archive step.
+
+# --- Backend configs ---
+**/appsettings*.json
+**/secrets*.json
+
+# --- Frontend environment files (may contain API keys / RPC endpoints) ---
+client-angular/src/environments/*
+
+# --- ABI and smart contract artifacts ---
+**/*.abi
+**/*abi*.json
+**/*-abi*.json
+**/*ABI*.json
+client-angular/src/assets/abis/**
+
+# --- Keys, secrets, keystores ---
+**/.env*
+**/*privateKey*
+**/*private*.*
+**/*key*.*
+**/*secret*.*
+**/*HashSecret*
+**/*TmnCode*
+**/*credentials*
+**/*.keystore
+**/*.p12
+**/*.pem
+**/*.key
+**/*.jks
+
+# --- Build outputs / bundles (avoid shipping large built bundles with embedded strings) ---
+client-angular/dist/**
+**/bin/**
+**/obj/**
+
+# --- Optional: local-only files, editors, OS ---
+.vscode/**
+*.log
+*.tmp
+
+# Review this file before deploying. If a pattern excludes something required in production,
+# provide sanitized configurations via environment variables or a secret store.

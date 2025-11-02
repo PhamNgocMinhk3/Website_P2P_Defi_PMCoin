@@ -1,0 +1,35 @@
+<header class="main-menu-header flex items-center justify-between p-2 sm:p-4">
+    <!-- Left side icons -->
+    <div class="flex items-center space-x-2 sm:space-x-4">
+        <a *ngFor="let icon of getLeftIcons()"
+            [routerLink]="icon.route"
+            routerLinkActive="active"
+            class="menu-button w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center"
+            [title]="icon.label">
+            <span class="menu-icon">{{ icon.icon }}</span>
+        </a>
+    </div>
+
+    <!-- Right side icons -->
+    <div class="flex items-center space-x-2 sm:space-x-4">
+        <a *ngFor="let icon of getRightIcons()"
+            [routerLink]="icon.route"
+            routerLinkActive="active"
+            class="menu-button-secondary w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center"
+            [title]="icon.label">
+            <span class="menu-icon">{{ icon.icon }}</span>
+        </a>
+
+        <!-- Bell Notification (conditionally shown) -->
+        <app-bell *ngIf="(userSettings$ | async)?.pushNotificationEnabled"></app-bell>
+
+        <!-- User profile -->
+        <ng-container *ngIf="currentUser$ | async as user; else defaultProfile">
+            <img alt="User profile picture" class="profile-image w-8 h-8 sm:w-10 sm:h-10 rounded-full cursor-pointer"
+                [src]="user.avatar || defaultAvatar" />
+        </ng-container>
+        <ng-template #defaultProfile>
+            <img alt="Default profile picture" class="profile-image w-8 h-8 sm:w-10 sm:h-10 rounded-full" [src]="defaultAvatar" />
+        </ng-template>
+    </div>
+</header>

@@ -1,0 +1,45 @@
+<div class="asset-chart-card">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span class="title-icon">📈</span>
+      Biểu đồ Tài sản
+    </h2>
+    <div class="chart-controls">
+      <button 
+        class="chart-period" 
+        [class.active]="selectedPeriod === '7D'"
+        (click)="onPeriodChange('7D')">
+        7D
+      </button>
+      <button 
+        class="chart-period" 
+        [class.active]="selectedPeriod === '30D'"
+        (click)="onPeriodChange('30D')">
+        30D
+      </button>
+    </div>
+  </div>
+  
+  <div class="card-content">
+    <div class="chart-container">
+      <canvas #chartCanvas></canvas>
+    </div>
+    
+    <div class="chart-stats">
+      <div class="stat-item">
+        <span class="stat-label">Cao nhất {{ selectedPeriod }}</span>
+        <span class="stat-value">{{ formatCurrency(getMaxValue()) }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Thấp nhất {{ selectedPeriod }}</span>
+        <span class="stat-value">{{ formatCurrency(getMinValue()) }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Thay đổi {{ selectedPeriod }}</span>
+        <span class="stat-value" [class]="getChangePercentage() >= 0 ? 'positive' : 'negative'">
+          {{ getChangePercentage() >= 0 ? '+' : '' }}{{ getChangePercentage().toFixed(1) }}%
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,47 @@
+:host {
+  display: block;
+  width: 100%;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.main-menu-header {
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+
+  .menu-button {
+    background: #007bff;
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: #0056b3;
+      transform: scale(1.05);
+    }
+  }
+
+  .menu-button-secondary {
+    background: #f8f9fa;
+    color: #666;
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: #e9ecef;
+      color: #333;
+      border-color: #adb5bd;
+    }
+  }
+
+  .profile-image {
+    border: 2px solid #007bff;
+    transition: all 0.3s ease;
+
+    &:hover {
+      border-color: #0056b3;
+      transform: scale(1.1);
+    }
+  }
+}

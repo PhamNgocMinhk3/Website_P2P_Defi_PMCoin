@@ -1,0 +1,208 @@
+<div class="analysis-container">
+  <!-- Header -->
+  <div class="analysis-header">
+    <h1 class="page-title">
+      <span class="title-icon">🤖</span>
+      Bot Phân Tích AI
+    </h1>
+    <p class="page-subtitle">Phân tích thị trường crypto với dữ liệu Binance thời gian thực</p>
+
+    <div class="header-controls">
+      <div class="connection-status" [class]="getConnectionStatusClass()">
+        <span class="status-dot"></span>
+        <span class="status-text">{{ getConnectionStatusText() }}</span>
+      </div>
+      <div class="last-update">
+        <span class="update-label">Cập nhật lần cuối:</span>
+        <span class="update-time">{{ lastUpdate | date:'HH:mm:ss' }}</span>
+        <span class="update-counter">(#{{ updateCounter }})</span>
+      </div>
+      <button class="refresh-btn" (click)="refreshData()" [disabled]="isLoading">
+        <span class="refresh-icon" [class.spinning]="isLoading">🔄</span>
+        Làm mới
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-section" *ngIf="isLoading">
+    <div class="loading-spinner">⏳</div>
+    <p>Đang tải dữ liệu thị trường...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div class="analysis-content" *ngIf="!isLoading">
+    <!-- Market Overview -->
+    <div class="market-overview">
+      <h2>Tổng quan thị trường</h2>
+      <div class="market-grid">
+        <div class="market-card" *ngFor="let data of marketData" [class.selected]="selectedSymbol === data.symbol"
+          (click)="selectSymbol(data.symbol)">
+          <div class="card-header">
+            <h3>{{ data.symbol }}</h3>
+            <span class="trend-badge" [class]="getTrendClass(data.trend)">
+              {{ data.trend }}
+            </span>
+          </div>
+
+          <div class="price-info">
+            <div class="current-price">${{ formatPrice(data.currentPrice) }}</div>
+            <div class="price-change" [class]="getChangeClass(data.priceChangePercent24h)">
+              {{ formatPercentage(data.priceChangePercent24h) }}
+            </div>
+          </div>
+
+          <div class="recommendation-info">
+            <span class="recommendation" [class]="getRecommendationClass(data.recommendation)">
+              {{ data.recommendation }}
+            </span>
+            <span class="confidence">{{ data.confidence.toFixed(0) }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detailed Analysis -->
+    <div class="detailed-analysis" *ngIf="selectedAnalysis">
+      <h2>Phân tích chi tiết - {{ selectedAnalysis.symbol }}</h2>
+
+      <div class="analysis-grid">
+        <!-- Price Analysis -->
+        <div class="analysis-card price-analysis">
+          <h3>📊 Phân tích giá</h3>
+          <div class="analysis-content">
+            <div class="metric">
+              <span class="metric-label">Giá hiện tại:</span>
+              <span class="metric-value">${{ formatPrice(selectedAnalysis.currentPrice) }}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Thay đổi 24h:</span>
+              <span class="metric-value" [class]="getChangeClass(selectedAnalysis.priceChange24h)">
+                ${{ formatPrice(selectedAnalysis.priceChange24h) }}
+                ({{ formatPercentage(selectedAnalysis.priceChangePercent24h) }})
+              </span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Khối lượng 24h:</span>
+              <span class="metric-value">{{ formatVolume(selectedAnalysis.volume24h) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Technical Analysis -->
+        <div class="analysis-card technical-analysis">
+          <h3>📈 Phân tích kỹ thuật</h3>
+          <div class="analysis-content">
+            <div class="metric">
+              <span class="metric-label">Xu hướng:</span>
+              <span class="metric-value trend-value" [class]="getTrendClass(selectedAnalysis.trend)">
+                {{ selectedAnalysis.trend }}
+              </span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">RSI:</span>
+              <span class="metric-value">{{ selectedAnalysis.rsi.toFixed(1) }}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Hỗ trợ:</span>
+              <span class="metric-value">${{ formatPrice(selectedAnalysis.support) }}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Kháng cự:</span>
+              <span class="metric-value">${{ formatPrice(selectedAnalysis.resistance) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trading Signal -->
+        <div class="analysis-card trading-signal">
+          <h3>🎯 Tín hiệu giao dịch</h3>
+          <div class="analysis-content">
+            <div class="signal-main">
+              <div class="recommendation-large" [class]="getRecommendationClass(selectedAnalysis.recommendation)">
+                {{ selectedAnalysis.recommendation }}
+              </div>
+              <div class="confidence-meter">
+                <div class="confidence-label">Độ tin cậy</div>
+                <div class="confidence-bar">
+                  <div class="confidence-fill" [style.width.%]="selectedAnalysis.confidence"
+                    [style.background-color]="getConfidenceColor(selectedAnalysis.confidence)">
+                  </div>
+                </div>
+                <div class="confidence-value">{{ selectedAnalysis.confidence.toFixed(0) }}%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Insights -->
+        <div class="analysis-card ai-insights">
+          <h3>🤖 Nhận định AI</h3>
+          <div class="analysis-content">
+            <div class="insight-item" *ngIf="selectedAnalysis.trend === 'BULLISH'">
+              <span class="insight-icon">📈</span>
+              <span class="insight-text">Thị trường đang trong xu hướng tăng. RSI ở mức {{
+                selectedAnalysis.rsi.toFixed(1) }}.</span>
+            </div>
+            <div class="insight-item" *ngIf="selectedAnalysis.trend === 'BEARISH'">
+              <span class="insight-icon">📉</span>
+              <span class="insight-text">Thị trường đang trong xu hướng giảm. Cần thận trọng khi đầu tư.</span>
+            </div>
+            <div class="insight-item" *ngIf="selectedAnalysis.trend === 'NEUTRAL'">
+              <span class="insight-icon">➡️</span>
+              <span class="insight-text">Thị trường đang sideway. Chờ tín hiệu rõ ràng hơn.</span>
+            </div>
+
+            <div class="insight-item" *ngIf="selectedAnalysis.rsi > 70">
+              <span class="insight-icon">⚠️</span>
+              <span class="insight-text">RSI cao ({{ selectedAnalysis.rsi.toFixed(1) }}), có thể bị quá mua.</span>
+            </div>
+            <div class="insight-item" *ngIf="selectedAnalysis.rsi < 30">
+              <span class="insight-icon">💡</span>
+              <span class="insight-text">RSI thấp ({{ selectedAnalysis.rsi.toFixed(1) }}), có thể bị quá bán.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions" *ngIf="selectedAnalysis">
+      <h3>⚡ Hành động nhanh</h3>
+      <div class="action-buttons">
+        <button class="action-btn buy-btn" *ngIf="selectedAnalysis.recommendation === 'BUY'">
+          <span class="btn-icon">📈</span>
+          <span class="btn-text">Mua {{ selectedAnalysis.symbol }}</span>
+        </button>
+        <button class="action-btn sell-btn" *ngIf="selectedAnalysis.recommendation === 'SELL'">
+          <span class="btn-icon">📉</span>
+          <span class="btn-text">Bán {{ selectedAnalysis.symbol }}</span>
+        </button>
+        <button class="action-btn hold-btn" *ngIf="selectedAnalysis.recommendation === 'HOLD'">
+          <span class="btn-icon">⏸️</span>
+          <span class="btn-text">Giữ {{ selectedAnalysis.symbol }}</span>
+        </button>
+        <button class="action-btn alert-btn" (click)="toggleEmailAlerts()" [class.active]="isEmailAlertEnabled">
+          <span class="btn-icon">
+            <ng-container *ngIf="isEmailAlertEnabled; else bellIcon">🔕</ng-container>
+            <ng-template #bellIcon>🔔</ng-template>
+          </span>
+          <span class="btn-text">
+            <ng-container *ngIf="isEmailAlertEnabled; else enableText">Tắt cảnh báo</ng-container>
+            <ng-template #enableText>Đặt cảnh báo</ng-template>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="disclaimer">
+      <h4>⚠️ Lưu ý quan trọng</h4>
+      <p>
+        Đây chỉ là công cụ phân tích hỗ trợ và không phải lời khuyên đầu tư.
+        Vui lòng tự nghiên cứu và đánh giá rủi ro trước khi đưa ra quyết định giao dịch.
+        Thị trường cryptocurrency có tính biến động cao và có thể gây thua lỗ.
+      </p>
+    </div>
+  </div>
+</div>

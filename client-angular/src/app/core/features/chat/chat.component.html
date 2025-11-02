@@ -1,0 +1,31 @@
+<div class="chat-page-layout">
+    <!-- Cột 1: Danh sách chat -->
+    <app-chat-list class="chat-list-column" (createGroup)="onCreateGroup()"></app-chat-list>
+
+    <!-- Cột 2: Khu vực chat chính -->
+    <app-chat-area class="chat-area-column" (toggleInfoSidebar)="toggleInfoSidebar()">
+    </app-chat-area>
+
+    <!-- Cột 3: Thông tin chi tiết (hiển thị có điều kiện) -->
+    <!-- Regular Chat Info for 1-1 chats -->
+    <app-chat-info *ngIf="isInfoSidebarVisible && !isSelectedUserGroup" class="chat-info-column"
+        [user]="selectedUser$ | async" [messages]="(selectedUserMessages$ | async) || []"
+        (createGroup)="onCreateGroup()" (deleteConversation)="onDeleteConversation()">
+    </app-chat-info>
+
+    <!-- Group Chat Info for group chats -->
+    <app-group-chat-info *ngIf="isInfoSidebarVisible && isSelectedUserGroup" class="chat-info-column"
+        [groupInfo]="groupInfo$ | async" [currentUserId]="currentUserId" (close)="toggleInfoSidebar()"
+        (leaveGroup)="onLeaveGroup()" (disbandGroup)="onDisbandGroup()"
+        (kickMember)="onKickMember($event)" (promoteToAdmin)="onPromoteToAdmin($event)"
+        (demoteFromAdmin)="onDemoteFromAdmin($event)" (transferOwnership)="onTransferOwnership($event)"
+        (setNickname)="onSetNickname($event)" (addMembers)="onAddMembers()"
+        (updateGroupSettings)="onUpdateGroupSettings($event)" (copyInviteLink)="onCopyInviteLink($event)">
+    </app-group-chat-info>
+</div>
+
+<!-- Group Creation Modal -->
+<app-group-creation [isVisible]="isGroupCreationVisible" (close)="closeGroupCreation()"
+    (groupCreated)="onGroupCreated($event)" [existingGroupId]="groupIdForAddingMembers"
+    (membersAdded)="onMembersAdded($event)">
+</app-group-creation>

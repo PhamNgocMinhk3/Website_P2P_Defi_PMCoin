@@ -1,0 +1,25 @@
+<div class="quick-actions-card">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span class="title-icon">⚡</span>
+      Lối tắt Nhanh
+    </h2>
+  </div>
+  
+  <div class="card-content">
+    <div class="quick-actions-grid">
+      <button 
+        *ngFor="let action of quickActions; trackBy: trackByActionId"
+        [class]="getActionClass(action.color)"
+        [attr.data-action-id]="action.id"
+        (click)="onActionClick(action)">
+        
+        <div class="action-icon">{{ action.icon }}</div>
+        <div class="action-text">
+          <span class="action-title">{{ action.title }}</span>
+          <span class="action-subtitle">{{ action.subtitle }}</span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,98 @@
+<div *ngIf="isVisible" class="modal-overlay" (click)="onClose()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="header-content">
+        <i class="fas fa-search header-icon"></i>
+        <h3 class="header-title">Tìm kiếm tin nhắn</h3>
+      </div>
+      <button class="close-btn" (click)="onClose()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Search Input -->
+    <div class="search-section">
+      <div class="search-box">
+        <i class="fas fa-search search-icon"></i>
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery"
+          (input)="onSearch()"
+          (keydown.escape)="onClose()"
+          placeholder="Nhập từ khóa tìm kiếm..."
+          class="search-input"
+        />
+        <button *ngIf="searchQuery" class="clear-btn" (click)="searchQuery = ''; onSearch()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Search Results -->
+    <div class="results-section">
+      <!-- Loading State -->
+      <div *ngIf="isSearching" class="loading-state">
+        <div class="loading-spinner"></div>
+        <p>Đang tìm kiếm...</p>
+      </div>
+
+      <!-- No Query State -->
+      <div *ngIf="!searchQuery && !isSearching" class="empty-state">
+        <i class="fas fa-search empty-icon"></i>
+        <h4>Tìm kiếm tin nhắn</h4>
+        <p>Nhập từ khóa để tìm kiếm trong cuộc trò chuyện</p>
+      </div>
+
+      <!-- No Results State -->
+      <div *ngIf="searchQuery && searchResults.length === 0 && !isSearching" class="no-results-state">
+        <i class="fas fa-search-minus empty-icon"></i>
+        <h4>Không tìm thấy kết quả</h4>
+        <p>Không có tin nhắn nào chứa từ khóa "{{ searchQuery }}"</p>
+      </div>
+
+      <!-- Results List -->
+      <div *ngIf="searchResults.length > 0 && !isSearching" class="results-list">
+        <div class="results-header">
+          <span class="results-count">{{ searchResults.length }} kết quả</span>
+        </div>
+        
+        <div class="results-container">
+          <div 
+            *ngFor="let result of searchResults; trackBy: trackByMessageId" 
+            class="result-item"
+            (click)="onResultClick(result.id)"
+          >
+            <div class="result-content">
+              <div class="result-header">
+                <!-- FIX: Display sender name directly from message object -->
+                <span class="sender-name">{{ result.senderUsername }}</span>
+                <span class="message-time">{{ formatMessageTime(result.timestamp) }}</span>
+              </div>
+
+              <div class="result-preview" [innerHTML]="highlightSearchTerm(getMessagePreview(result))">
+              </div>
+              
+              <div class="result-type">
+                <i [class]="getMessageTypeIcon(result.type)"></i>
+                <span>{{ getMessageTypeLabel(result.type) }}</span>
+              </div>
+            </div>
+            
+            <div class="result-action">
+              <i class="fas fa-arrow-right"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <div class="footer-info">
+        <i class="fas fa-info-circle"></i>
+        <span>Nhấn ESC để đóng, Enter để tìm kiếm</span>
+      </div>
+    </div>
+  </div>
+</div>

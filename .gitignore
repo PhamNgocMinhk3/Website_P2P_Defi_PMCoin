@@ -1,0 +1,67 @@
+# .gitignore - keep repository clean from build outputs and local secrets
+
+# Visual Studio / .NET
+.vs/
+*.user
+*.suo
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Angular build output
+client-angular/dist/
+
+# Backend build outputs
+Backend/bin/
+Backend/obj/
+
+# Environments and secrets
+*.env
+client-angular/src/environments/
+
+# ABI and contract artifacts
+**/*.abi
+**/*abi*.json
+
+# Backend config and secrets (from .deployignore)
+**/appsettings*.json
+**/secrets*.json
+
+# More ABI patterns and assets
+**/*-abi*.json
+**/*ABI*.json
+client-angular/src/assets/abis/**
+
+# Keys, secrets, keystores
+**/.env*
+**/*privateKey*
+**/*private*.*
+**/*key*.*
+**/*secret*.*
+**/*HashSecret*
+**/*TmnCode*
+**/*credentials*
+**/*.keystore
+**/*.p12
+**/*.pem
+**/*.key
+**/*.jks
+
+# General bin/obj to ignore across the repo
+**/bin/**
+**/obj/**
+
+# Logs and temp
+*.log
+*.tmp
+
+# IDE settings
+.vscode/
+.idea/
+
+# OS files
+Thumbs.db
+desktop.ini

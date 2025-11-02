@@ -1,0 +1,139 @@
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.notification-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-width: 320px;
+  max-width: 480px;
+  animation: slideInFromRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  &.success {
+    background: linear-gradient(
+      135deg,
+      rgba(34, 197, 94, 0.95),
+      rgba(21, 128, 61, 0.95)
+    );
+    color: white;
+    border-color: rgba(34, 197, 94, 0.3);
+  }
+
+  &.error {
+    background: linear-gradient(
+      135deg,
+      rgba(239, 68, 68, 0.95),
+      rgba(185, 28, 28, 0.95)
+    );
+    color: white;
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+
+  &.info {
+    background: linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.95),
+      rgba(29, 78, 216, 0.95)
+    );
+    color: white;
+    border-color: rgba(59, 130, 246, 0.3);
+  }
+
+  &.warning {
+    background: linear-gradient(
+      135deg,
+      rgba(245, 158, 11, 0.95),
+      rgba(217, 119, 6, 0.95)
+    );
+    color: white;
+    border-color: rgba(245, 158, 11, 0.3);
+  }
+}
+
+.notification-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-message {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .notification-toast {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    min-width: auto;
+    max-width: none;
+
+    .notification-message {
+      font-size: 13px;
+    }
+  }
+}
